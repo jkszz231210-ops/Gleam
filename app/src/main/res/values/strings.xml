@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">SuperScreenshot</string>
+    <string name="tile_label">超级截屏</string>
+    <string name="capture_in_progress">捕捉中…</string>
+    <string name="capture_failed_protected">此内容可能受保护（DRM），无法生成超级截屏。</string>
+    <string name="capture_failed_generic">生成失败，请重试。</string>
+    <string name="capture_saved">已保存到相册</string>
+    <string name="app_intro">超级截屏：一键把“屏幕内容 + 屏幕反射”记录到一张图。</string>
+    <string name="app_hint_tile">提示：在系统“编辑快捷设置”里把“超级截屏”拖进面板，之后下拉一点就能用。</string>
+    <string name="current_bg_color">当前背景色：%1$s</string>
+</resources>
+
+

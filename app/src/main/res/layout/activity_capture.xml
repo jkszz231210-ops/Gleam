@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black">
+
+    <!-- HyperOS 等 ROM 上，CameraX 仅绑定 ImageCapture 可能无法稳定启动；
+         放一个隐藏 PreviewView 提供 Surface（不影响“生活感”，不展示预览）。 -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/hiddenPreviewView"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:layout_gravity="top|start"
+        android:alpha="0"
+        app:implementationMode="performance" />
+
+    <TextView
+        android:id="@+id/statusText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="@string/capture_in_progress"
+        android:textColor="@android:color/white"
+        android:textSize="18sp" />
+
+</FrameLayout>
+
+
