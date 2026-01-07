@@ -5,7 +5,6 @@ import android.content.Intent
 import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
-import android.widget.Toast
 import com.superscreenshot.ui.CaptureActivity
 
 class SuperScreenshotTileService : TileService() {
@@ -22,10 +21,13 @@ class SuperScreenshotTileService : TileService() {
         // HyperOS/部分 ROM：锁屏或后台限制时，直接 startActivity 可能被吞掉
         val run = Runnable {
             try {
-                Toast.makeText(this, "超级截屏：启动中…", Toast.LENGTH_SHORT).show()
                 val intent =
                     Intent(this, CaptureActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        .addFlags(
+                            Intent.FLAG_ACTIVITY_NEW_TASK or
+                                Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                                Intent.FLAG_ACTIVITY_SINGLE_TOP,
+                        )
 
                 if (Build.VERSION.SDK_INT >= 34) {
                     val pi =
@@ -41,7 +43,7 @@ class SuperScreenshotTileService : TileService() {
                     startActivityAndCollapse(intent)
                 }
             } catch (t: Throwable) {
-                Toast.makeText(this, "超级截屏：启动失败（${t.javaClass.simpleName}）", Toast.LENGTH_SHORT).show()
+                // 不弹 Toast，避免被截进图里；失败时只能静默
             }
         }
 

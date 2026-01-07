@@ -28,6 +28,9 @@
             android:name=".ui.CaptureActivity"
             android:exported="false"
             android:launchMode="singleTask"
+            android:taskAffinity="com.superscreenshot.capture"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
             android:theme="@style/Theme.SuperScreenshot.Transparent" />
 
         <service
