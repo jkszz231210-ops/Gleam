@@ -25,7 +25,7 @@ object BgColorPrefs {
 
     fun getCameraLens(context: Context): Int {
         return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getInt(KEY_CAMERA_LENS, 0) // 默认后置
+            .getInt(KEY_CAMERA_LENS, 1) // 默认改为前置 (1)，方便记录自己
     }
 
     fun setCameraLens(context: Context, lens: Int) {

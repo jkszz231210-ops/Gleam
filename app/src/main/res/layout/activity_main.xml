@@ -58,14 +58,14 @@
                 android:id="@+id/rbBackCamera"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="后置摄像头"
+                android:text="后置 (拍前方/环境)"
                 android:textColor="@android:color/white" />
             <RadioButton
                 android:id="@+id/rbFrontCamera"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
-                android:text="前置摄像头"
+                android:text="前置 (拍自己/脸)"
                 android:textColor="@android:color/white" />
         </RadioGroup>
 
