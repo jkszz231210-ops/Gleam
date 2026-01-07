@@ -27,7 +27,8 @@
         <activity
             android:name=".ui.CaptureActivity"
             android:exported="false"
-            android:launchMode="singleTask" />
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.SuperScreenshot.Transparent" />
 
         <service
             android:name=".tile.SuperScreenshotTileService"

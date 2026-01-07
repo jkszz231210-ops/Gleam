@@ -138,8 +138,9 @@ class CaptureActivity : AppCompatActivity() {
             // 等到前台服务真正进入 mediaProjection 状态再截屏（Android 16/HyperOS 否则会直接 SecurityException）
             awaitGuardReady(guardStart)
 
-            // 关键修复：增加延迟，让系统授权弹窗彻底消失，避免截到弹窗或桌面未完全显示
-            kotlinx.coroutines.delay(1000)
+            // 关键修复：增加延迟，并在此期间彻底隐藏本应用所有的 UI，确保截到的是桌面或背景应用
+            kotlinx.coroutines.delay(800)
+            status.visibility = android.view.View.INVISIBLE
 
             val screenshot =
                 try {
@@ -151,6 +152,7 @@ class CaptureActivity : AppCompatActivity() {
                         )
                     }
                 } catch (t: Throwable) {
+                    status.visibility = android.view.View.VISIBLE // 出错恢复显示
                     showErrorDialog("截屏失败", t)
                     shouldAutoFinish = false
                     return
@@ -162,32 +164,30 @@ class CaptureActivity : AppCompatActivity() {
                 }
 
             if (ProtectedContentDetector.isLikelyProtected(screenshot)) {
+                status.visibility = android.view.View.VISIBLE
                 Toast.makeText(this, R.string.capture_failed_protected, Toast.LENGTH_LONG).show()
                 shouldAutoFinish = false
                 return
             }
 
-            // 检查 Activity 状态，防止在授权弹窗后 activity 已 stop 导致相机绑定失败
-            if (!lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED)) {
-                Toast.makeText(this, "页面已不可见，取消捕捉", Toast.LENGTH_SHORT).show()
-                shouldAutoFinish = false
-                return
-            }
-
-            val useFront = BgColorPrefs.getCameraLens(this@CaptureActivity) == 1
-            val cameraBitmap =
-                try {
-                    CameraCapturer.captureCameraOnce(
-                        context = this@CaptureActivity,
-                        lifecycleOwner = this@CaptureActivity,
-                        previewView = previewView,
-                        useFront = useFront
-                    )
-                } catch (t: Throwable) {
-                    showErrorDialog("相机失败", t)
-                    shouldAutoFinish = false
-                    return
-                }
+            // 检查 Activity 状态，放宽要求：只要没被销毁就继续。
+            // 因为透明 Activity 在系统弹窗出现时可能是 STOPPED 状态。
+            if (!isFinishing && !isDestroyed) {
+                val useFront = BgColorPrefs.getCameraLens(this@CaptureActivity) == 1
+                val cameraBitmap =
+                    try {
+                        CameraCapturer.captureCameraOnce(
+                            context = this@CaptureActivity,
+                            lifecycleOwner = this@CaptureActivity,
+                            previewView = previewView,
+                            useFront = useFront
+                        )
+                    } catch (t: Throwable) {
+                        status.visibility = android.view.View.VISIBLE
+                        showErrorDialog("相机失败", t)
+                        shouldAutoFinish = false
+                        return
+                    }
 
             val output =
                 withContext(Dispatchers.Default) {
@@ -230,13 +230,18 @@ class CaptureActivity : AppCompatActivity() {
                     )
                 }
 
-            if (uri != null) {
-                Toast.makeText(this, R.string.capture_saved, Toast.LENGTH_SHORT).show()
+                if (uri != null) {
+                    Toast.makeText(this, R.string.capture_saved, Toast.LENGTH_SHORT).show()
+                } else {
+                    status.visibility = android.view.View.VISIBLE
+                    Toast.makeText(this, R.string.capture_failed_generic, Toast.LENGTH_SHORT).show()
+                    shouldAutoFinish = false
+                }
             } else {
-                Toast.makeText(this, R.string.capture_failed_generic, Toast.LENGTH_SHORT).show()
                 shouldAutoFinish = false
             }
-        } catch (_: Throwable) {
+        } catch (e: Exception) {
+            status.visibility = android.view.View.VISIBLE
             Toast.makeText(this, R.string.capture_failed_generic, Toast.LENGTH_SHORT).show()
             shouldAutoFinish = false
         } finally {
@@ -244,6 +249,7 @@ class CaptureActivity : AppCompatActivity() {
                 // 给 Toast 一点时间展示
                 window.decorView.postDelayed({ finish() }, 900)
             } else {
+                status.visibility = android.view.View.VISIBLE
                 status.text = "失败：请查看弹窗信息（可复制），然后发我。"
             }
         }

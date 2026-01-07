@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black">
+    android:background="@android:color/transparent">
 
     <!-- HyperOS 等 ROM 上，CameraX 仅绑定 ImageCapture 可能无法稳定启动；
          放一个隐藏 PreviewView 提供 Surface（不影响“生活感”，不展示预览）。 -->
