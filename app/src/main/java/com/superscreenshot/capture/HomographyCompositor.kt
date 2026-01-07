@@ -45,6 +45,7 @@ object HomographyCompositor {
         screenshot: Bitmap,
         cameraFrame: Bitmap,
         alpha: Float = 0.45f,
+        edgeWeight: Float = 0.25f,
     ): Result {
         if (!isOpenCVReady) return fallback(screenshot, cameraFrame, alpha)
 
@@ -83,7 +84,7 @@ object HomographyCompositor {
             Core.subtract(reflectionWarped, shotMat, residual)
 
             // 关键：只在“屏幕暗部”展示反射，避免整体变亮/自拍感
-            val residualMasked = applyDarkScreenMask(shotMat, residual)
+            val residualMasked = applyDarkScreenMask(shotMat, residual, edgeWeight)
 
             // output = shotMat + alpha * residualMasked
             val out = Mat()
@@ -116,7 +117,7 @@ object HomographyCompositor {
         }
     }
 
-    fun composeFromWarpedAndResidual(screenWarped: Bitmap, residual: Bitmap, alpha: Float): Bitmap {
+    fun composeFromWarpedAndResidual(screenWarped: Bitmap, residual: Bitmap, alpha: Float, edgeWeight: Float = 0.25f): Bitmap {
         val w = screenWarped.width
         val h = screenWarped.height
         require(residual.width == w && residual.height == h)
@@ -128,7 +129,7 @@ object HomographyCompositor {
         Imgproc.cvtColor(base, base, Imgproc.COLOR_RGBA2RGB)
         Imgproc.cvtColor(res, res, Imgproc.COLOR_RGBA2RGB)
 
-        val resMasked = applyDarkScreenMask(base, res)
+        val resMasked = applyDarkScreenMask(base, res, edgeWeight)
 
         val out = Mat()
         Core.addWeighted(base, 1.0, resMasked, alpha.coerceIn(0f, 1f).toDouble(), 0.0, out)
@@ -199,7 +200,7 @@ object HomographyCompositor {
     /**
      * 根据屏幕内容亮度生成遮罩：越暗 -> 越显示反射；越亮 -> 越抑制反射。
      */
-    private fun applyDarkScreenMask(screenRgb: Mat, residualRgb: Mat): Mat {
+    private fun applyDarkScreenMask(screenRgb: Mat, residualRgb: Mat, edgeWeight: Float): Mat {
         // 核心目标：
         // 1) 反射强度随屏幕亮度变化：屏幕亮 -> 反射几乎消失；屏幕暗 -> 反射明显
         // 2) 反射强调“轮廓”，弱化内部细节：更像玻璃里隐隐出现的人/环境，而不是相机拍清细节
@@ -228,7 +229,8 @@ object HomographyCompositor {
         Imgproc.cvtColor(inv, inv3, Imgproc.COLOR_GRAY2RGB) // 3 通道遮罩
 
         Core.multiply(residualF, inv3, residualF)
-        Core.multiply(residualF, Scalar(0.30 * global, 0.30 * global, 0.30 * global), residualF)
+        // 屏幕越暗 global 越大，整体反射越强；同时整体强度更大一些，解决“暗屏反射不够”
+        Core.multiply(residualF, Scalar(0.45 * global, 0.45 * global, 0.45 * global), residualF)
 
         val masked8 = Mat()
         residualF.convertTo(masked8, CvType.CV_8UC3) // 回到 0..255
@@ -250,7 +252,7 @@ object HomographyCompositor {
 
         val out = Mat()
         // edges 只做轻量增强，避免出现“线稿感”
-        Core.addWeighted(blurred, 1.0, edgesRgb, 0.25, 0.0, out)
+        Core.addWeighted(blurred, 1.0, edgesRgb, edgeWeight.coerceIn(0f, 1f).toDouble(), 0.0, out)
         return out
     }
 }

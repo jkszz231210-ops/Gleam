@@ -40,6 +40,7 @@ import org.opencv.core.Core
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.pow
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -186,8 +187,11 @@ class CaptureActivity : AppCompatActivity() {
             // - 屏幕越暗 -> 反射越明显
             val screenLuma01 = estimateMeanLuma01(screenshot)
             val darkFactor = (1f - screenLuma01).coerceIn(0f, 1f)
-            val dark3 = darkFactor * darkFactor * darkFactor
-            val reflectAlpha = (0.18f + 0.45f * dark3).coerceIn(0f, 0.75f)
+            val curveExp = BgColorPrefs.getReflectionCurveExp(this@CaptureActivity)
+            val darkPow = darkFactor.toDouble().pow(curveExp.toDouble()).toFloat().coerceIn(0f, 1f)
+            // 亮屏：更接近 0；暗屏：更接近 1
+            val reflectAlpha = (0.02f + 0.70f * darkPow).coerceIn(0f, 0.85f)
+            val edgeWeight = BgColorPrefs.getEdgeEnhanceWeight(this@CaptureActivity).coerceIn(0f, 1f)
 
             // 检查 Activity 状态，放宽要求：只要没被销毁就继续。
             // 因为透明 Activity 在系统弹窗出现时可能是 STOPPED 状态。
@@ -219,6 +223,7 @@ class CaptureActivity : AppCompatActivity() {
                                 screenshot = screenshot,
                                 cameraFrame = cameraBitmap,
                                 alpha = reflectAlpha,
+                                edgeWeight = edgeWeight,
                             )
 
                             val bgColor = BgColorPrefs.getBgColor(this@CaptureActivity)
@@ -229,17 +234,18 @@ class CaptureActivity : AppCompatActivity() {
                                     screenWarped = base.screenWarped,
                                     residual = replacedResidual,
                                     alpha = reflectAlpha,
+                                    edgeWeight = edgeWeight,
                                 )
                             } else {
                                 base.output
                             }
                         } catch (t: Throwable) {
                             // 若 OpenCV 逻辑执行中仍崩溃，最后回退到简单合成
-                            SimpleCompositor.simpleBlend(screenshot, cameraBitmap, (0.10f + 0.18f * dark3))
+                            SimpleCompositor.simpleBlend(screenshot, cameraBitmap, (0.06f + 0.22f * darkPow))
                         }
                     } else {
                         // OpenCV 未初始化，直接走简单合成
-                        SimpleCompositor.simpleBlend(screenshot, cameraBitmap, (0.10f + 0.18f * dark3))
+                        SimpleCompositor.simpleBlend(screenshot, cameraBitmap, (0.06f + 0.22f * darkPow))
                     }
                 }
 

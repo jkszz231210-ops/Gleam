@@ -105,6 +105,52 @@
                 android:textColor="@android:color/white" />
         </RadioGroup>
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="20dp"
+            android:background="#33FFFFFF" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="反射调节（0.2）"
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/reflectionCurveValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textColor="#B3FFFFFF"
+            android:textSize="13sp"
+            android:text="强度曲线：-" />
+
+        <SeekBar
+            android:id="@+id/reflectionCurveSeek"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:max="70" />
+
+        <TextView
+            android:id="@+id/edgeEnhanceValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:textColor="#B3FFFFFF"
+            android:textSize="13sp"
+            android:text="轮廓增强：-" />
+
+        <SeekBar
+            android:id="@+id/edgeEnhanceSeek"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:max="100" />
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

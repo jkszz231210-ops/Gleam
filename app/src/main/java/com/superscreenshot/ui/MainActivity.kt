@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
+import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.superscreenshot.R
@@ -19,6 +20,10 @@ class MainActivity : AppCompatActivity() {
         val current = findViewById<TextView>(R.id.currentColorText)
         val cameraGroup = findViewById<RadioGroup>(R.id.cameraGroup)
         val orientationGroup = findViewById<RadioGroup>(R.id.orientationGroup)
+        val curveSeek = findViewById<SeekBar>(R.id.reflectionCurveSeek)
+        val curveValue = findViewById<TextView>(R.id.reflectionCurveValue)
+        val edgeSeek = findViewById<SeekBar>(R.id.edgeEnhanceSeek)
+        val edgeValue = findViewById<TextView>(R.id.edgeEnhanceValue)
 
         fun refresh() {
             val c = BgColorPrefs.getBgColor(this)
@@ -35,6 +40,14 @@ class MainActivity : AppCompatActivity() {
                 1 -> findViewById<RadioButton>(R.id.rbPortrait).isChecked = true
                 else -> findViewById<RadioButton>(R.id.rbAutoOrientation).isChecked = true
             }
+
+            val exp = BgColorPrefs.getReflectionCurveExp(this)
+            curveValue.text = "强度曲线：${"%.1f".format(exp)}（越大：亮屏更压，暗屏更强）"
+            curveSeek.progress = ((exp * 10f).toInt() - 10).coerceIn(0, 70)
+
+            val edge = BgColorPrefs.getEdgeEnhanceWeight(this)
+            edgeValue.text = "轮廓增强：${(edge * 100).toInt()}%"
+            edgeSeek.progress = (edge * 100f).toInt().coerceIn(0, 100)
         }
 
         cameraGroup.setOnCheckedChangeListener { _, checkedId ->
@@ -51,6 +64,30 @@ class MainActivity : AppCompatActivity() {
                 }
             BgColorPrefs.setTargetOrientation(this, orient)
         }
+
+        curveSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (!fromUser) return
+                val exp = (10 + progress).coerceIn(10, 80) / 10f
+                BgColorPrefs.setReflectionCurveExp(this@MainActivity, exp)
+                curveValue.text = "强度曲线：${"%.1f".format(exp)}（越大：亮屏更压，暗屏更强）"
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        edgeSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (!fromUser) return
+                val edge = progress.coerceIn(0, 100) / 100f
+                BgColorPrefs.setEdgeEnhanceWeight(this@MainActivity, edge)
+                edgeValue.text = "轮廓增强：${progress.coerceIn(0, 100)}%"
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
 
         chips.removeAllViews()
         val size = resources.displayMetrics.density * 40f
