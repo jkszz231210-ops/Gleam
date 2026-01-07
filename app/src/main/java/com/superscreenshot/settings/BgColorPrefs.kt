@@ -15,7 +15,7 @@ object BgColorPrefs {
     // edgeEnhancePercent: 0..100 => 0.0..1.0
     private const val KEY_EDGE_ENHANCE_PERCENT = "edge_enhance_percent"
 
-    private const val DEFAULT_BG_COLOR = 0xFF0B1B3A.toInt()
+    private const val DEFAULT_BG_COLOR = Color.BLACK
     private const val DEFAULT_REFLECTION_CURVE_EXP_TENTHS = 40 // 4.0
     private const val DEFAULT_EDGE_ENHANCE_PERCENT = 28 // 0.28
 

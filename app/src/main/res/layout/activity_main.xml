@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/black">
@@ -17,139 +18,224 @@
             android:textColor="@android:color/white"
             android:textSize="16sp" />
 
-        <TextView
-            android:id="@+id/currentColorText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:textColor="@android:color/white"
-            android:textSize="14sp" />
-
-        <LinearLayout
-            android:id="@+id/colorChips"
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:orientation="horizontal"
-            android:baselineAligned="false"
-            android:gravity="start" />
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="20dp"
-            android:background="#33FFFFFF" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="相机选择"
-            android:textColor="@android:color/white"
-            android:textSize="16sp" />
-
-        <RadioGroup
-            android:id="@+id/cameraGroup"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:orientation="horizontal">
-            <RadioButton
-                android:id="@+id/rbBackCamera"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="后置 (拍前方/环境)"
-                android:textColor="@android:color/white" />
-            <RadioButton
-                android:id="@+id/rbFrontCamera"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:text="前置 (拍自己/脸)"
-                android:textColor="@android:color/white" />
-        </RadioGroup>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="目标截图方向"
-            android:textColor="@android:color/white"
-            android:textSize="16sp" />
-
-        <RadioGroup
-            android:id="@+id/orientationGroup"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:orientation="horizontal">
-            <RadioButton
-                android:id="@+id/rbAutoOrientation"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="跟随屏幕"
-                android:textColor="@android:color/white" />
-            <RadioButton
-                android:id="@+id/rbPortrait"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:text="强制竖屏"
-                android:textColor="@android:color/white" />
-            <RadioButton
-                android:id="@+id/rbLandscape"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:text="强制横屏"
-                android:textColor="@android:color/white" />
-        </RadioGroup>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="20dp"
-            android:background="#33FFFFFF" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="反射调节（0.2）"
-            android:textColor="@android:color/white"
-            android:textSize="16sp" />
-
-        <TextView
-            android:id="@+id/reflectionCurveValue"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:textColor="#B3FFFFFF"
-            android:textSize="13sp"
-            android:text="强度曲线：-" />
-
-        <SeekBar
-            android:id="@+id/reflectionCurveSeek"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:max="70" />
-
-        <TextView
-            android:id="@+id/edgeEnhanceValue"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:textColor="#B3FFFFFF"
-            android:textSize="13sp"
-            android:text="轮廓增强：-" />
+            app:cardBackgroundColor="#141414"
+            app:cardCornerRadius="18dp"
+            app:cardUseCompatPadding="true">
 
-        <SeekBar
-            android:id="@+id/edgeEnhanceSeek"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/section_bg_color"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/bg_color_tip"
+                    android:textColor="#B3FFFFFF"
+                    android:textSize="13sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <View
+                        android:id="@+id/currentColorSwatch"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:background="@android:color/white" />
+
+                    <TextView
+                        android:id="@+id/currentColorText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:textColor="@android:color/white"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <com.superscreenshot.ui.widget.ColorWheelView
+                    android:id="@+id/colorWheel"
+                    android:layout_width="match_parent"
+                    android:layout_height="260dp"
+                    android:layout_marginTop="12dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnResetBlack"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/btn_reset_black"
+                    app:cornerRadius="16dp"
+                    app:backgroundTint="#222222"
+                    android:textColor="@android:color/white" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:max="100" />
+            android:layout_marginTop="14dp"
+            app:cardBackgroundColor="#141414"
+            app:cardCornerRadius="18dp"
+            app:cardUseCompatPadding="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/section_camera"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp" />
+
+                <RadioGroup
+                    android:id="@+id/cameraGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+                    <RadioButton
+                        android:id="@+id/rbBackCamera"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="后置 (拍前方/环境)"
+                        android:textColor="@android:color/white" />
+                    <RadioButton
+                        android:id="@+id/rbFrontCamera"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
+                        android:text="前置 (拍自己/脸)"
+                        android:textColor="@android:color/white" />
+                </RadioGroup>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            app:cardBackgroundColor="#141414"
+            app:cardCornerRadius="18dp"
+            app:cardUseCompatPadding="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/section_orientation"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp" />
+
+                <RadioGroup
+                    android:id="@+id/orientationGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+                    <RadioButton
+                        android:id="@+id/rbAutoOrientation"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="跟随屏幕"
+                        android:textColor="@android:color/white" />
+                    <RadioButton
+                        android:id="@+id/rbPortrait"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
+                        android:text="强制竖屏"
+                        android:textColor="@android:color/white" />
+                    <RadioButton
+                        android:id="@+id/rbLandscape"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
+                        android:text="强制横屏"
+                        android:textColor="@android:color/white" />
+                </RadioGroup>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            app:cardBackgroundColor="#141414"
+            app:cardCornerRadius="18dp"
+            app:cardUseCompatPadding="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/section_reflection_tuning"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/reflectionCurveValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:textColor="#B3FFFFFF"
+                    android:textSize="13sp"
+                    android:text="强度曲线：-" />
+
+                <SeekBar
+                    android:id="@+id/reflectionCurveSeek"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:max="70" />
+
+                <TextView
+                    android:id="@+id/edgeEnhanceValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:textColor="#B3FFFFFF"
+                    android:textSize="13sp"
+                    android:text="轮廓增强：-" />
+
+                <SeekBar
+                    android:id="@+id/edgeEnhanceSeek"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:max="100" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <TextView
             android:layout_width="wrap_content"

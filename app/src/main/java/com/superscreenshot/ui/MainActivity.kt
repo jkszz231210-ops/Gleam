@@ -1,23 +1,25 @@
 package com.superscreenshot.ui
 
-import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
-import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.SeekBar
 import android.widget.TextView
+import com.google.android.material.button.MaterialButton
 import androidx.appcompat.app.AppCompatActivity
 import com.superscreenshot.R
 import com.superscreenshot.settings.BgColorPrefs
+import com.superscreenshot.ui.widget.ColorWheelView
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val chips = findViewById<LinearLayout>(R.id.colorChips)
         val current = findViewById<TextView>(R.id.currentColorText)
+        val swatch = findViewById<android.view.View>(R.id.currentColorSwatch)
+        val wheel = findViewById<ColorWheelView>(R.id.colorWheel)
+        val btnResetBlack = findViewById<MaterialButton>(R.id.btnResetBlack)
         val cameraGroup = findViewById<RadioGroup>(R.id.cameraGroup)
         val orientationGroup = findViewById<RadioGroup>(R.id.orientationGroup)
         val curveSeek = findViewById<SeekBar>(R.id.reflectionCurveSeek)
@@ -28,6 +30,8 @@ class MainActivity : AppCompatActivity() {
         fun refresh() {
             val c = BgColorPrefs.getBgColor(this)
             current.text = getString(R.string.current_bg_color, String.format("#%08X", c))
+            swatch.setBackgroundColor(c)
+            wheel.setColor(c)
 
             if (BgColorPrefs.getCameraLens(this) == 1) {
                 findViewById<RadioButton>(R.id.rbFrontCamera).isChecked = true
@@ -48,6 +52,20 @@ class MainActivity : AppCompatActivity() {
             val edge = BgColorPrefs.getEdgeEnhanceWeight(this)
             edgeValue.text = "轮廓增强：${(edge * 100).toInt()}%"
             edgeSeek.progress = (edge * 100f).toInt().coerceIn(0, 100)
+        }
+
+        wheel.setOnColorChangedListener(object : ColorWheelView.OnColorChangedListener {
+            override fun onColorChanged(color: Int) {
+                BgColorPrefs.setBgColor(this@MainActivity, color)
+                val c = BgColorPrefs.getBgColor(this@MainActivity)
+                current.text = getString(R.string.current_bg_color, String.format("#%08X", c))
+                swatch.setBackgroundColor(c)
+            }
+        })
+
+        btnResetBlack.setOnClickListener {
+            BgColorPrefs.setBgColor(this, android.graphics.Color.BLACK)
+            refresh()
         }
 
         cameraGroup.setOnCheckedChangeListener { _, checkedId ->
@@ -88,27 +106,6 @@ class MainActivity : AppCompatActivity() {
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
-
-        chips.removeAllViews()
-        val size = resources.displayMetrics.density * 40f
-        val margin = (resources.displayMetrics.density * 10f).toInt()
-
-        for (color in BgColorPrefs.presets()) {
-            val v = TextView(this)
-            val bg = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(color)
-                setStroke((resources.displayMetrics.density * 1f).toInt(), 0x55FFFFFF)
-            }
-            v.background = bg
-            v.setOnClickListener {
-                BgColorPrefs.setBgColor(this, color)
-                refresh()
-            }
-            val lp = LinearLayout.LayoutParams(size.toInt(), size.toInt())
-            lp.setMargins(margin, margin, margin, margin)
-            chips.addView(v, lp)
-        }
 
         refresh()
     }
