@@ -3,6 +3,8 @@ package com.superscreenshot.capture
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.view.Surface
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Camera
 import androidx.camera.core.Preview
@@ -11,6 +13,7 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
+import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -25,18 +28,22 @@ object CameraCapturer {
         lifecycleOwner: LifecycleOwner,
         previewView: PreviewView,
         useFront: Boolean = false,
+        targetRotation: Int = Surface.ROTATION_0,
     ): Bitmap {
         val cameraProvider = awaitCameraProvider(context)
         val executor = ContextCompat.getMainExecutor(context)
 
         val preview =
             Preview.Builder()
+                .setTargetRotation(targetRotation)
                 .build()
                 .also { it.setSurfaceProvider(previewView.surfaceProvider) }
 
         val imageCapture =
             ImageCapture.Builder()
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                .setFlashMode(ImageCapture.FLASH_MODE_OFF)
+                .setTargetRotation(targetRotation)
                 .build()
 
         val selector = if (useFront) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
@@ -54,9 +61,9 @@ object CameraCapturer {
             val range = camera.cameraInfo.exposureState.exposureCompensationRange
             // Kotlin IntRange 没有 isEmpty()；用 lower<=upper 判断
             if (range.lower <= range.upper && range.lower < 0) {
-                // 经验值：-2~-4 往往能显著降低“太亮的自拍感”
-                val target = (-3).coerceIn(range.lower, range.upper)
-                withTimeout(600) {
+                // 尽量压暗到设备允许的最小值，避免“自拍太亮”的感觉
+                val target = range.lower
+                withTimeout(900) {
                     suspendCancellableCoroutine<Unit> { cont ->
                         camera.cameraControl.setExposureCompensationIndex(target)
                             .addListener(
@@ -93,7 +100,7 @@ object CameraCapturer {
             }
             val bmp = BitmapFactory.decodeFile(file.absolutePath)
                 ?: throw IllegalStateException("decode camera bitmap failed")
-            return bmp
+            return fixExifRotation(bmp, file.absolutePath)
         } finally {
             cameraProvider.unbindAll()
             try {
@@ -117,6 +124,30 @@ object CameraCapturer {
                 ContextCompat.getMainExecutor(context),
             )
         }
+    }
+
+    private fun fixExifRotation(bitmap: Bitmap, filePath: String): Bitmap {
+        val orientation =
+            try {
+                ExifInterface(filePath).getAttributeInt(
+                    ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_NORMAL,
+                )
+            } catch (_: Throwable) {
+                ExifInterface.ORIENTATION_NORMAL
+            }
+
+        val degrees =
+            when (orientation) {
+                ExifInterface.ORIENTATION_ROTATE_90 -> 90
+                ExifInterface.ORIENTATION_ROTATE_180 -> 180
+                ExifInterface.ORIENTATION_ROTATE_270 -> 270
+                else -> 0
+            }
+        if (degrees == 0) return bitmap
+
+        val m = Matrix().apply { postRotate(degrees.toFloat()) }
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, m, true)
     }
 }
 

@@ -200,7 +200,7 @@ object HomographyCompositor {
      * 根据屏幕内容亮度生成遮罩：越暗 -> 越显示反射；越亮 -> 越抑制反射。
      */
     private fun applyDarkScreenMask(screenRgb: Mat, residualRgb: Mat): Mat {
-        // mask = (1 - gray(screen))^2  -> 暗部更强，亮部更弱
+        // mask = (1 - gray(screen))^3  -> 暗部更强，亮部更弱（更“像反射”）
         val gray = Mat()
         Imgproc.cvtColor(screenRgb, gray, Imgproc.COLOR_RGB2GRAY)
 
@@ -210,6 +210,7 @@ object HomographyCompositor {
         val inv = Mat(grayF.size(), CvType.CV_32F, Scalar(1.0))
         Core.subtract(inv, grayF, inv) // inv = 1 - gray
         Core.multiply(inv, inv, inv) // inv = inv^2
+        Core.multiply(inv, inv, inv) // inv = inv^3
 
         // residualF = residual * inv * strength
         val residualF = Mat()
@@ -219,7 +220,7 @@ object HomographyCompositor {
         Imgproc.cvtColor(inv, inv3, Imgproc.COLOR_GRAY2RGB) // 3 通道遮罩
 
         Core.multiply(residualF, inv3, residualF)
-        Core.multiply(residualF, Scalar(0.55, 0.55, 0.55), residualF) // 进一步降低强度，避免“太亮”
+        Core.multiply(residualF, Scalar(0.35, 0.35, 0.35), residualF) // 更克制，避免“太亮/自拍感”
 
         val out = Mat()
         residualF.convertTo(out, CvType.CV_8UC3) // 回到 0..255

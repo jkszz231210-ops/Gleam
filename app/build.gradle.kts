@@ -56,6 +56,9 @@ dependencies {
 
     // ML Kit selfie segmentation (for residual background solid-color replacement)
     implementation("com.google.mlkit:segmentation-selfie:16.0.0-beta6")
+
+    // EXIF (fix camera JPEG rotation so it matches screen orientation)
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
 }
 
 

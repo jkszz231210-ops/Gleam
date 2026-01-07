@@ -14,6 +14,7 @@ import android.os.Bundle as OsBundle
 import android.os.Handler
 import android.os.Looper
 import android.os.ResultReceiver
+import android.view.Surface
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -182,13 +183,15 @@ class CaptureActivity : AppCompatActivity() {
             // 因为透明 Activity 在系统弹窗出现时可能是 STOPPED 状态。
             if (!isFinishing && !isDestroyed) {
                 val useFront = BgColorPrefs.getCameraLens(this@CaptureActivity) == 1
+                val rotation = this@CaptureActivity.display?.rotation ?: Surface.ROTATION_0
                 val cameraBitmap =
                     try {
                         CameraCapturer.captureCameraOnce(
                             context = this@CaptureActivity,
                             lifecycleOwner = this@CaptureActivity,
                             previewView = previewView,
-                            useFront = useFront
+                            useFront = useFront,
+                            targetRotation = rotation,
                         )
                     } catch (t: Throwable) {
                         status.visibility = android.view.View.VISIBLE
@@ -204,7 +207,7 @@ class CaptureActivity : AppCompatActivity() {
                             val base = HomographyCompositor.compose(
                                 screenshot = screenshot,
                                 cameraFrame = cameraBitmap,
-                                alpha = 0.55f,
+                                alpha = 0.45f,
                             )
 
                             val bgColor = BgColorPrefs.getBgColor(this@CaptureActivity)
@@ -214,18 +217,18 @@ class CaptureActivity : AppCompatActivity() {
                                 HomographyCompositor.composeFromWarpedAndResidual(
                                     screenWarped = base.screenWarped,
                                     residual = replacedResidual,
-                                    alpha = 0.55f,
+                                    alpha = 0.45f,
                                 )
                             } else {
                                 base.output
                             }
                         } catch (t: Throwable) {
                             // 若 OpenCV 逻辑执行中仍崩溃，最后回退到简单合成
-                            SimpleCompositor.simpleBlend(screenshot, cameraBitmap, 0.35f)
+                            SimpleCompositor.simpleBlend(screenshot, cameraBitmap, 0.25f)
                         }
                     } else {
                         // OpenCV 未初始化，直接走简单合成
-                        SimpleCompositor.simpleBlend(screenshot, cameraBitmap, 0.35f)
+                        SimpleCompositor.simpleBlend(screenshot, cameraBitmap, 0.25f)
                     }
                 }
 
