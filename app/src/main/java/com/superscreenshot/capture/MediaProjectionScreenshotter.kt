@@ -15,6 +15,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.util.DisplayMetrics
 import android.view.WindowManager
+import com.superscreenshot.settings.BgColorPrefs
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.concurrent.atomic.AtomicBoolean
@@ -30,7 +31,7 @@ object MediaProjectionScreenshotter {
 
         val wm = context.getSystemService(WindowManager::class.java)
         val displayMetrics = DisplayMetrics()
-        val (width, height) =
+        var (width, height) =
             if (Build.VERSION.SDK_INT >= 30) {
                 val b = wm.currentWindowMetrics.bounds
                 displayMetrics.densityDpi = context.resources.displayMetrics.densityDpi
@@ -40,6 +41,18 @@ object MediaProjectionScreenshotter {
                 wm.defaultDisplay.getRealMetrics(displayMetrics)
                 Pair(displayMetrics.widthPixels, displayMetrics.heightPixels)
             }
+
+        // 根据设置强制调整方向
+        val targetOrient = BgColorPrefs.getTargetOrientation(context)
+        if (targetOrient == 1) { // 强制竖屏
+            if (width > height) {
+                val tmp = width; width = height; height = tmp
+            }
+        } else if (targetOrient == 2) { // 强制横屏
+            if (height > width) {
+                val tmp = width; width = height; height = tmp
+            }
+        }
 
         val handlerThread = HandlerThread("mp-shot").apply { start() }
         val handler = Handler(handlerThread.looper)

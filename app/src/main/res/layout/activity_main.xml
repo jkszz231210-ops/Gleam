@@ -34,6 +34,70 @@
             android:baselineAligned="false"
             android:gravity="start" />
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="20dp"
+            android:background="#33FFFFFF" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="相机选择"
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
+
+        <RadioGroup
+            android:id="@+id/cameraGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+            <RadioButton
+                android:id="@+id/rbBackCamera"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="后置摄像头"
+                android:textColor="@android:color/white" />
+            <RadioButton
+                android:id="@+id/rbFrontCamera"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:text="前置摄像头"
+                android:textColor="@android:color/white" />
+        </RadioGroup>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="目标截图方向"
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
+
+        <RadioGroup
+            android:id="@+id/orientationGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+            <RadioButton
+                android:id="@+id/rbPortrait"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="强制竖屏"
+                android:textColor="@android:color/white" />
+            <RadioButton
+                android:id="@+id/rbLandscape"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:text="强制横屏"
+                android:textColor="@android:color/white" />
+        </RadioGroup>
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

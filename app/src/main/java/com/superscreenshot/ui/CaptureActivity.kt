@@ -138,6 +138,9 @@ class CaptureActivity : AppCompatActivity() {
             // 等到前台服务真正进入 mediaProjection 状态再截屏（Android 16/HyperOS 否则会直接 SecurityException）
             awaitGuardReady(guardStart)
 
+            // 关键修复：增加延迟，让系统授权弹窗彻底消失，避免截到弹窗或桌面未完全显示
+            kotlinx.coroutines.delay(1000)
+
             val screenshot =
                 try {
                     withContext(Dispatchers.Default) {
@@ -164,12 +167,21 @@ class CaptureActivity : AppCompatActivity() {
                 return
             }
 
+            // 检查 Activity 状态，防止在授权弹窗后 activity 已 stop 导致相机绑定失败
+            if (!lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED)) {
+                Toast.makeText(this, "页面已不可见，取消捕捉", Toast.LENGTH_SHORT).show()
+                shouldAutoFinish = false
+                return
+            }
+
+            val useFront = BgColorPrefs.getCameraLens(this@CaptureActivity) == 1
             val cameraBitmap =
                 try {
-                    CameraCapturer.captureBackCameraOnce(
+                    CameraCapturer.captureCameraOnce(
                         context = this@CaptureActivity,
                         lifecycleOwner = this@CaptureActivity,
                         previewView = previewView,
+                        useFront = useFront
                     )
                 } catch (t: Throwable) {
                     showErrorDialog("相机失败", t)

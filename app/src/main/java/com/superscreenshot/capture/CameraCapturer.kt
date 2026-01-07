@@ -18,10 +18,11 @@ import kotlin.coroutines.resumeWithException
 
 object CameraCapturer {
 
-    suspend fun captureBackCameraOnce(
+    suspend fun captureCameraOnce(
         context: Context,
         lifecycleOwner: LifecycleOwner,
         previewView: PreviewView,
+        useFront: Boolean = false,
     ): Bitmap {
         val cameraProvider = awaitCameraProvider(context)
         val executor = ContextCompat.getMainExecutor(context)
@@ -36,10 +37,12 @@ object CameraCapturer {
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
                 .build()
 
+        val selector = if (useFront) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
+
         cameraProvider.unbindAll()
         cameraProvider.bindToLifecycle(
             lifecycleOwner,
-            CameraSelector.DEFAULT_BACK_CAMERA,
+            selector,
             preview,
             imageCapture,
         )

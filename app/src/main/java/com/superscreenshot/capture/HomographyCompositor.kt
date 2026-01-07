@@ -37,6 +37,10 @@ object HomographyCompositor {
      * - residual = clamp(camera - screenWarpedFull)
      * - output = screenWarpedFull + alpha * residual
      */
+    /**
+     * 核心改进：以截图（screenshot）的分辨率为输出基准，
+     * 将相机帧（cameraFrame）中的反射层 逆向 Warp 到截图空间。
+     */
     fun compose(
         screenshot: Bitmap,
         cameraFrame: Bitmap,
@@ -52,41 +56,52 @@ object HomographyCompositor {
             Utils.bitmapToMat(cameraFrame, camMat)
             Imgproc.cvtColor(camMat, camMat, Imgproc.COLOR_RGBA2RGB)
 
-            val warped = warpScreenshotToQuad(screenshot, camMat.size(), quad.asList())
-                ?: return fallback(screenshot, cameraFrame, alpha)
+            val shotW = screenshot.width
+            val shotH = screenshot.height
+            val outputBmp = screenshot.copy(Bitmap.Config.ARGB_8888, true)
 
-            // residual = camera - warped (clamp 0..255)
+            // 计算从 相机四边形 到 截图矩形 的变换
+            val src = MatOfPoint2f(quad.p0, quad.p1, quad.p2, quad.p3) // 相机中的屏幕四角
+            val dst = MatOfPoint2f(
+                Point(0.0, 0.0),
+                Point(shotW.toDouble(), 0.0),
+                Point(shotW.toDouble(), shotH.toDouble()),
+                Point(0.0, shotH.toDouble())
+            )
+
+            val h = Imgproc.getPerspectiveTransform(src, dst)
+            val reflectionWarped = Mat(Size(shotW.toDouble(), shotH.toDouble()), camMat.type())
+            Imgproc.warpPerspective(camMat, reflectionWarped, h, reflectionWarped.size())
+
+            // 现在 reflectionWarped 就是对齐到截图分辨率的“反射层”
+            val shotMat = Mat()
+            Utils.bitmapToMat(screenshot, shotMat)
+            Imgproc.cvtColor(shotMat, shotMat, Imgproc.COLOR_RGBA2RGB)
+
+            // residual = reflectionWarped - shotMat (提取纯反射)
             val residual = Mat()
-            Core.subtract(camMat, warped, residual)
+            Core.subtract(reflectionWarped, shotMat, residual)
 
-            // output = warped + alpha * residual
+            // output = shotMat + alpha * residual
             val out = Mat()
-            Core.addWeighted(warped, 1.0, residual, alpha.coerceIn(0f, 1f).toDouble(), 0.0, out)
+            Core.addWeighted(shotMat, 1.0, residual, alpha.coerceIn(0f, 1f).toDouble(), 0.0, out)
 
-            val outBmp = Bitmap.createBitmap(cameraFrame.width, cameraFrame.height, Bitmap.Config.ARGB_8888)
-            val warpedBmp = Bitmap.createBitmap(cameraFrame.width, cameraFrame.height, Bitmap.Config.ARGB_8888)
-            val residualBmp = Bitmap.createBitmap(cameraFrame.width, cameraFrame.height, Bitmap.Config.ARGB_8888)
-
-            // 转回 RGBA，方便 Bitmap 接收
             val outRgba = Mat()
-            val warpedRgba = Mat()
             val residualRgba = Mat()
             Imgproc.cvtColor(out, outRgba, Imgproc.COLOR_RGB2RGBA)
-            Imgproc.cvtColor(warped, warpedRgba, Imgproc.COLOR_RGB2RGBA)
             Imgproc.cvtColor(residual, residualRgba, Imgproc.COLOR_RGB2RGBA)
 
-            Utils.matToBitmap(outRgba, outBmp)
-            Utils.matToBitmap(warpedRgba, warpedBmp)
+            val residualBmp = Bitmap.createBitmap(shotW, shotH, Bitmap.Config.ARGB_8888)
+            Utils.matToBitmap(outRgba, outputBmp)
             Utils.matToBitmap(residualRgba, residualBmp)
 
             Result(
-                output = outBmp,
-                screenWarped = warpedBmp,
+                output = outputBmp,
+                screenWarped = screenshot, // 在此模式下 base 就是原始截图
                 residual = residualBmp,
                 usedFallback = false,
             )
         } catch (t: Throwable) {
-            // 捕获 UnsatisfiedLinkError 或 Mat 操作异常
             fallback(screenshot, cameraFrame, alpha)
         }
     }
@@ -152,11 +167,18 @@ object HomographyCompositor {
     }
 
     private fun fallback(screenshot: Bitmap, cameraFrame: Bitmap, alpha: Float): Result {
-        val out = SimpleCompositor.simpleBlend(screenshot, cameraFrame, cameraAlpha = alpha)
+        // 回退模式下，依然以截图分辨率为准
+        val shotW = screenshot.width
+        val shotH = screenshot.height
+        
+        // 将相机帧缩放到截图大小作为残差层
+        val cameraScaled = Bitmap.createScaledBitmap(cameraFrame, shotW, shotH, true)
+        val out = SimpleCompositor.simpleBlend(screenshot, cameraScaled, cameraAlpha = alpha)
+        
         return Result(
             output = out,
-            screenWarped = out,
-            residual = out,
+            screenWarped = screenshot,
+            residual = cameraScaled,
             usedFallback = true,
         )
     }
