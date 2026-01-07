@@ -6,6 +6,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.projection.MediaProjectionConfig
 import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.Bundle
@@ -112,7 +113,14 @@ class CaptureActivity : AppCompatActivity() {
 
     private fun requestMediaProjection() {
         val mgr = getSystemService(MediaProjectionManager::class.java)
-        projectionLauncher.launch(mgr.createScreenCaptureIntent())
+        val intent = if (Build.VERSION.SDK_INT >= 34) {
+            // Android 14+：强制指定只能捕获“全屏”，不再显示“选择应用”
+            val config = MediaProjectionConfig.createConfigForDefaultDisplay()
+            mgr.createScreenCaptureIntent(config)
+        } else {
+            mgr.createScreenCaptureIntent()
+        }
+        projectionLauncher.launch(intent)
     }
 
     private suspend fun runCapture(resultCode: Int, data: Intent) {

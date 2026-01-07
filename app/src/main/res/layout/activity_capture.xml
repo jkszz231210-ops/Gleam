@@ -5,14 +5,15 @@
     android:layout_height="match_parent"
     android:background="@android:color/transparent">
 
-    <!-- HyperOS 等 ROM 上，CameraX 仅绑定 ImageCapture 可能无法稳定启动；
-         放一个隐藏 PreviewView 提供 Surface（不影响“生活感”，不展示预览）。 -->
+    <!-- 彻底隐藏：宽高设为 0，且移出屏幕（translation） -->
     <androidx.camera.view.PreviewView
         android:id="@+id/hiddenPreviewView"
-        android:layout_width="1dp"
-        android:layout_height="1dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:layout_gravity="top|start"
         android:alpha="0"
+        android:translationX="-100dp"
+        android:translationY="-100dp"
         app:implementationMode="performance" />
 
     <TextView
