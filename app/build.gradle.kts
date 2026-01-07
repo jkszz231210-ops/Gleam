@@ -23,6 +23,14 @@ android {
                 "proguard-rules.pro",
             )
         }
+
+        // Windows 上经常会出现旧的 debug APK 被资源管理器/杀软占用导致 :app:packageDebug 无法删除输出目录。
+        // 新增一个独立的 buildType，用于输出到 outputs/apk/debug02/，并固定文件名为 app-debug-0.2.apk。
+        create("debug02") {
+            initWith(getByName("debug"))
+            matchingFallbacks += listOf("debug")
+            signingConfig = signingConfigs.getByName("debug")
+        }
     }
 
     compileOptions {
@@ -32,6 +40,19 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+}
+
+// Build debug02, then copy to a fixed name so it's easy to find/share.
+// This avoids relying on AGP internal APIs for renaming APK outputs.
+tasks.register<Copy>("copyDebug02Apk") {
+    dependsOn("assembleDebug02")
+    val srcDir = layout.buildDirectory.dir("outputs/apk/debug02")
+    val dstDir = layout.buildDirectory.dir("outputs/apk/ss")
+    from(srcDir)
+    include("*.apk")
+    exclude("app-debug-0.2.apk")
+    into(dstDir)
+    rename { "app-debug-0.2.apk" }
 }
 
 dependencies {
