@@ -30,10 +30,10 @@ class MainActivity : AppCompatActivity() {
                 findViewById<RadioButton>(R.id.rbBackCamera).isChecked = true
             }
 
-            if (BgColorPrefs.getTargetOrientation(this) == 2) {
-                findViewById<RadioButton>(R.id.rbLandscape).isChecked = true
-            } else {
-                findViewById<RadioButton>(R.id.rbPortrait).isChecked = true
+            when (BgColorPrefs.getTargetOrientation(this)) {
+                2 -> findViewById<RadioButton>(R.id.rbLandscape).isChecked = true
+                1 -> findViewById<RadioButton>(R.id.rbPortrait).isChecked = true
+                else -> findViewById<RadioButton>(R.id.rbAutoOrientation).isChecked = true
             }
         }
 
@@ -43,7 +43,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         orientationGroup.setOnCheckedChangeListener { _, checkedId ->
-            val orient = if (checkedId == R.id.rbLandscape) 2 else 1
+            val orient =
+                when (checkedId) {
+                    R.id.rbLandscape -> 2
+                    R.id.rbPortrait -> 1
+                    else -> 0 // rbAutoOrientation
+                }
             BgColorPrefs.setTargetOrientation(this, orient)
         }
 

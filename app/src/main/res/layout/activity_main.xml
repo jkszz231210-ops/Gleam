@@ -84,9 +84,16 @@
             android:layout_marginTop="10dp"
             android:orientation="horizontal">
             <RadioButton
+                android:id="@+id/rbAutoOrientation"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="跟随屏幕"
+                android:textColor="@android:color/white" />
+            <RadioButton
                 android:id="@+id/rbPortrait"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
                 android:text="强制竖屏"
                 android:textColor="@android:color/white" />
             <RadioButton
