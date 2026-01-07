@@ -49,8 +49,8 @@ object ResidualBackgroundReplacer {
         val outPixels = IntArray(w * h)
         residual.getPixels(inPixels, 0, w, 0, 0, w, h)
 
-        // 背景色在 residual 空间里不宜太“实”，用一个固定强度系数
-        val beta = 0.55f
+        // 背景色在 residual 空间里不宜太“实”，强度要更克制，避免“亮、假”
+        val beta = 0.35f
         val bgR = ((Color.red(solidColor) * beta).roundToInt()).coerceIn(0, 255)
         val bgG = ((Color.green(solidColor) * beta).roundToInt()).coerceIn(0, 255)
         val bgB = ((Color.blue(solidColor) * beta).roundToInt()).coerceIn(0, 255)

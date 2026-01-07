@@ -82,14 +82,24 @@ object HomographyCompositor {
             val residual = Mat()
             Core.subtract(reflectionWarped, shotMat, residual)
 
-            // output = shotMat + alpha * residual
+            // 关键：只在“屏幕暗部”展示反射，避免整体变亮/自拍感
+            val residualMasked = applyDarkScreenMask(shotMat, residual)
+
+            // output = shotMat + alpha * residualMasked
             val out = Mat()
-            Core.addWeighted(shotMat, 1.0, residual, alpha.coerceIn(0f, 1f).toDouble(), 0.0, out)
+            Core.addWeighted(
+                shotMat,
+                1.0,
+                residualMasked,
+                alpha.coerceIn(0f, 1f).toDouble(),
+                0.0,
+                out,
+            )
 
             val outRgba = Mat()
             val residualRgba = Mat()
             Imgproc.cvtColor(out, outRgba, Imgproc.COLOR_RGB2RGBA)
-            Imgproc.cvtColor(residual, residualRgba, Imgproc.COLOR_RGB2RGBA)
+            Imgproc.cvtColor(residualMasked, residualRgba, Imgproc.COLOR_RGB2RGBA)
 
             val residualBmp = Bitmap.createBitmap(shotW, shotH, Bitmap.Config.ARGB_8888)
             Utils.matToBitmap(outRgba, outputBmp)
@@ -118,8 +128,10 @@ object HomographyCompositor {
         Imgproc.cvtColor(base, base, Imgproc.COLOR_RGBA2RGB)
         Imgproc.cvtColor(res, res, Imgproc.COLOR_RGBA2RGB)
 
+        val resMasked = applyDarkScreenMask(base, res)
+
         val out = Mat()
-        Core.addWeighted(base, 1.0, res, alpha.coerceIn(0f, 1f).toDouble(), 0.0, out)
+        Core.addWeighted(base, 1.0, resMasked, alpha.coerceIn(0f, 1f).toDouble(), 0.0, out)
 
         val outRgba = Mat()
         Imgproc.cvtColor(out, outRgba, Imgproc.COLOR_RGB2RGBA)
@@ -173,7 +185,8 @@ object HomographyCompositor {
         
         // 将相机帧缩放到截图大小作为残差层
         val cameraScaled = Bitmap.createScaledBitmap(cameraFrame, shotW, shotH, true)
-        val out = SimpleCompositor.simpleBlend(screenshot, cameraScaled, cameraAlpha = alpha)
+        // 回退也做暗部遮罩（纯 Kotlin 版本会更慢，这里用简单“降低强度”替代）
+        val out = SimpleCompositor.simpleBlend(screenshot, cameraScaled, cameraAlpha = (alpha * 0.55f))
         
         return Result(
             output = out,
@@ -181,6 +194,36 @@ object HomographyCompositor {
             residual = cameraScaled,
             usedFallback = true,
         )
+    }
+
+    /**
+     * 根据屏幕内容亮度生成遮罩：越暗 -> 越显示反射；越亮 -> 越抑制反射。
+     */
+    private fun applyDarkScreenMask(screenRgb: Mat, residualRgb: Mat): Mat {
+        // mask = (1 - gray(screen))^2  -> 暗部更强，亮部更弱
+        val gray = Mat()
+        Imgproc.cvtColor(screenRgb, gray, Imgproc.COLOR_RGB2GRAY)
+
+        val grayF = Mat()
+        gray.convertTo(grayF, CvType.CV_32F, 1.0 / 255.0)
+
+        val inv = Mat(grayF.size(), CvType.CV_32F, Scalar(1.0))
+        Core.subtract(inv, grayF, inv) // inv = 1 - gray
+        Core.multiply(inv, inv, inv) // inv = inv^2
+
+        // residualF = residual * inv * strength
+        val residualF = Mat()
+        residualRgb.convertTo(residualF, CvType.CV_32F)
+
+        val inv3 = Mat()
+        Imgproc.cvtColor(inv, inv3, Imgproc.COLOR_GRAY2RGB) // 3 通道遮罩
+
+        Core.multiply(residualF, inv3, residualF)
+        Core.multiply(residualF, Scalar(0.55, 0.55, 0.55), residualF) // 进一步降低强度，避免“太亮”
+
+        val out = Mat()
+        residualF.convertTo(out, CvType.CV_8UC3) // 回到 0..255
+        return out
     }
 }
 
