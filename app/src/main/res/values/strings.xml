@@ -7,6 +7,7 @@
     <string name="capture_saved">已保存到相册</string>
     <string name="app_intro">超级截屏：一键把“屏幕内容 + 屏幕反射”记录到一张图。</string>
     <string name="app_hint_tile">提示：在系统“编辑快捷设置”里把“超级截屏”拖进面板，之后下拉一点就能用。</string>
+    <string name="app_hint_kill_background">如果出现“无法截屏/一直弹授权/截到本应用界面”等异常，请先在系统多任务里划掉 SuperScreenshot（清后台）后再试。</string>
     <string name="current_bg_color">当前背景色：%1$s</string>
 </resources>
 
