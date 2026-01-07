@@ -18,6 +18,7 @@ import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
+import kotlin.math.roundToInt
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -29,6 +30,7 @@ object CameraCapturer {
         previewView: PreviewView,
         useFront: Boolean = false,
         targetRotation: Int = Surface.ROTATION_0,
+        screenLuma01: Float? = null,
     ): Bitmap {
         val cameraProvider = awaitCameraProvider(context)
         val executor = ContextCompat.getMainExecutor(context)
@@ -61,8 +63,17 @@ object CameraCapturer {
             val range = camera.cameraInfo.exposureState.exposureCompensationRange
             // Kotlin IntRange 没有 isEmpty()；用 lower<=upper 判断
             if (range.lower <= range.upper && range.lower < 0) {
-                // 尽量压暗到设备允许的最小值，避免“自拍太亮”的感觉
-                val target = range.lower
+                // 屏幕越暗，真实反射越明显 -> 我们把曝光越压暗，让“反射像玻璃里隐隐出现的轮廓”
+                // 屏幕越亮，真实反射几乎看不见 -> 曝光更接近正常，避免“相机硬拍出细节”
+                val dark3 =
+                    if (screenLuma01 != null) {
+                        val d = (1f - screenLuma01).coerceIn(0f, 1f)
+                        d * d * d
+                    } else {
+                        1f
+                    }
+
+                val target = (range.lower.toFloat() * dark3).roundToInt().coerceIn(range.lower, range.upper)
                 withTimeout(900) {
                     suspendCancellableCoroutine<Unit> { cont ->
                         camera.cameraControl.setExposureCompensationIndex(target)

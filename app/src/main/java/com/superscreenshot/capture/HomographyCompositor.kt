@@ -200,12 +200,20 @@ object HomographyCompositor {
      * 根据屏幕内容亮度生成遮罩：越暗 -> 越显示反射；越亮 -> 越抑制反射。
      */
     private fun applyDarkScreenMask(screenRgb: Mat, residualRgb: Mat): Mat {
-        // mask = (1 - gray(screen))^3  -> 暗部更强，亮部更弱（更“像反射”）
+        // 核心目标：
+        // 1) 反射强度随屏幕亮度变化：屏幕亮 -> 反射几乎消失；屏幕暗 -> 反射明显
+        // 2) 反射强调“轮廓”，弱化内部细节：更像玻璃里隐隐出现的人/环境，而不是相机拍清细节
+        //
+        // mask = (1 - gray(screen))^3  -> 暗部更强，亮部更弱
         val gray = Mat()
         Imgproc.cvtColor(screenRgb, gray, Imgproc.COLOR_RGB2GRAY)
 
         val grayF = Mat()
         gray.convertTo(grayF, CvType.CV_32F, 1.0 / 255.0)
+
+        // 全局强度（屏幕越亮越趋近 0）
+        val mean = Core.mean(grayF).`val`[0].coerceIn(0.0, 1.0)
+        val global = ((1.0 - mean) * (1.0 - mean)).coerceIn(0.0, 1.0)
 
         val inv = Mat(grayF.size(), CvType.CV_32F, Scalar(1.0))
         Core.subtract(inv, grayF, inv) // inv = 1 - gray
@@ -220,10 +228,29 @@ object HomographyCompositor {
         Imgproc.cvtColor(inv, inv3, Imgproc.COLOR_GRAY2RGB) // 3 通道遮罩
 
         Core.multiply(residualF, inv3, residualF)
-        Core.multiply(residualF, Scalar(0.35, 0.35, 0.35), residualF) // 更克制，避免“太亮/自拍感”
+        Core.multiply(residualF, Scalar(0.30 * global, 0.30 * global, 0.30 * global), residualF)
+
+        val masked8 = Mat()
+        residualF.convertTo(masked8, CvType.CV_8UC3) // 回到 0..255
+
+        // 细节处理：模糊 + 边缘增强（“轮廓清晰、内部朦胧”）
+        val blurred = Mat()
+        Imgproc.GaussianBlur(masked8, blurred, Size(0.0, 0.0), 3.0)
+
+        val grayRes = Mat()
+        Imgproc.cvtColor(blurred, grayRes, Imgproc.COLOR_RGB2GRAY)
+
+        val edges = Mat()
+        Imgproc.Canny(grayRes, edges, 12.0, 40.0)
+        val kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, Size(3.0, 3.0))
+        Imgproc.dilate(edges, edges, kernel)
+
+        val edgesRgb = Mat()
+        Imgproc.cvtColor(edges, edgesRgb, Imgproc.COLOR_GRAY2RGB)
 
         val out = Mat()
-        residualF.convertTo(out, CvType.CV_8UC3) // 回到 0..255
+        // edges 只做轻量增强，避免出现“线稿感”
+        Core.addWeighted(blurred, 1.0, edgesRgb, 0.25, 0.0, out)
         return out
     }
 }

@@ -38,6 +38,8 @@ import kotlinx.coroutines.withContext
 import org.opencv.android.OpenCVLoader
 import org.opencv.core.Core
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -179,6 +181,14 @@ class CaptureActivity : AppCompatActivity() {
                 return
             }
 
+            // 反射强度应随屏幕亮度变化：
+            // - 屏幕越亮 -> 反射越看不见
+            // - 屏幕越暗 -> 反射越明显
+            val screenLuma01 = estimateMeanLuma01(screenshot)
+            val darkFactor = (1f - screenLuma01).coerceIn(0f, 1f)
+            val dark3 = darkFactor * darkFactor * darkFactor
+            val reflectAlpha = (0.18f + 0.45f * dark3).coerceIn(0f, 0.75f)
+
             // 检查 Activity 状态，放宽要求：只要没被销毁就继续。
             // 因为透明 Activity 在系统弹窗出现时可能是 STOPPED 状态。
             if (!isFinishing && !isDestroyed) {
@@ -192,6 +202,7 @@ class CaptureActivity : AppCompatActivity() {
                             previewView = previewView,
                             useFront = useFront,
                             targetRotation = rotation,
+                            screenLuma01 = screenLuma01,
                         )
                     } catch (t: Throwable) {
                         status.visibility = android.view.View.VISIBLE
@@ -207,7 +218,7 @@ class CaptureActivity : AppCompatActivity() {
                             val base = HomographyCompositor.compose(
                                 screenshot = screenshot,
                                 cameraFrame = cameraBitmap,
-                                alpha = 0.45f,
+                                alpha = reflectAlpha,
                             )
 
                             val bgColor = BgColorPrefs.getBgColor(this@CaptureActivity)
@@ -217,18 +228,18 @@ class CaptureActivity : AppCompatActivity() {
                                 HomographyCompositor.composeFromWarpedAndResidual(
                                     screenWarped = base.screenWarped,
                                     residual = replacedResidual,
-                                    alpha = 0.45f,
+                                    alpha = reflectAlpha,
                                 )
                             } else {
                                 base.output
                             }
                         } catch (t: Throwable) {
                             // 若 OpenCV 逻辑执行中仍崩溃，最后回退到简单合成
-                            SimpleCompositor.simpleBlend(screenshot, cameraBitmap, 0.25f)
+                            SimpleCompositor.simpleBlend(screenshot, cameraBitmap, (0.10f + 0.18f * dark3))
                         }
                     } else {
                         // OpenCV 未初始化，直接走简单合成
-                        SimpleCompositor.simpleBlend(screenshot, cameraBitmap, 0.25f)
+                        SimpleCompositor.simpleBlend(screenshot, cameraBitmap, (0.10f + 0.18f * dark3))
                     }
                 }
 
@@ -303,6 +314,39 @@ class CaptureActivity : AppCompatActivity() {
                 // 不做 stop，避免误停；真正 stop 在 finally 里
             }
         }
+    }
+
+    /**
+     * 快速估算截图平均亮度（0..1）。用于动态控制“反射层”强弱，模拟真实屏幕反射规律。
+     */
+    private fun estimateMeanLuma01(bitmap: android.graphics.Bitmap): Float {
+        val w = bitmap.width
+        val h = bitmap.height
+        if (w <= 0 || h <= 0) return 0.5f
+
+        // 采样步长：约 200x200 以内的采样量，避免卡 UI
+        val step = max(1, min(w, h) / 200)
+        var sum = 0.0
+        var count = 0
+
+        var y = 0
+        while (y < h) {
+            var x = 0
+            while (x < w) {
+                val c = bitmap.getPixel(x, y)
+                val r = (c shr 16) and 0xFF
+                val g = (c shr 8) and 0xFF
+                val b = (c) and 0xFF
+                // Rec.709 luma
+                val l = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255.0
+                sum += l
+                count++
+                x += step
+            }
+            y += step
+        }
+        if (count <= 0) return 0.5f
+        return (sum / count).toFloat().coerceIn(0f, 1f)
     }
 }
 
