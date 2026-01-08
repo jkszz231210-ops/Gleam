@@ -254,7 +254,7 @@ class CaptureActivity : AppCompatActivity() {
                     MediaStoreSaver.saveJpeg(
                         context = this@CaptureActivity,
                         bitmap = output,
-                        displayName = "SuperScreenshot_${System.currentTimeMillis()}.jpg",
+                        displayName = "${getString(R.string.screenshot_file_prefix)}_${System.currentTimeMillis()}.jpg",
                     )
                 }
 

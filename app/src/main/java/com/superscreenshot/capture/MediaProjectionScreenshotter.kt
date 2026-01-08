@@ -16,6 +16,7 @@ import android.os.HandlerThread
 import android.util.DisplayMetrics
 import android.view.WindowManager
 import com.superscreenshot.settings.BgColorPrefs
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.concurrent.atomic.AtomicBoolean
@@ -23,6 +24,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 object MediaProjectionScreenshotter {
+    private const val TIMEOUT_MS = 1800L
 
     suspend fun captureOnce(context: Context, resultCode: Int, data: Intent): Bitmap {
         val mgr = context.getSystemService(MediaProjectionManager::class.java)
@@ -54,6 +56,8 @@ object MediaProjectionScreenshotter {
             }
         }
 
+        require(width > 0 && height > 0) { "Invalid capture size: ${width}x$height" }
+
         val handlerThread = HandlerThread("mp-shot").apply { start() }
         val handler = Handler(handlerThread.looper)
 
@@ -72,23 +76,29 @@ object MediaProjectionScreenshotter {
 
         val reader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 2)
         var virtualDisplay: VirtualDisplay? = null
+        val done = AtomicBoolean(false)
 
         try {
             virtualDisplay =
-                projection.createVirtualDisplay(
-                    "SuperScreenshot",
-                    width,
-                    height,
-                    displayMetrics.densityDpi,
-                    0,
-                    reader.surface,
-                    null,
-                    handler,
-                )
+                try {
+                    projection.createVirtualDisplay(
+                        context.getString(com.superscreenshot.R.string.virtual_display_name),
+                        width,
+                        height,
+                        displayMetrics.densityDpi,
+                        0,
+                        reader.surface,
+                        null,
+                        handler,
+                    )
+                } catch (t: Throwable) {
+                    throw IllegalStateException("虚拟显示创建失败，可能是截屏权限/窗口异常", t)
+                }
+            requireNotNull(virtualDisplay) { "VirtualDisplay is null" }
 
-            return withTimeout(1500) {
+            return try {
+                withTimeout(TIMEOUT_MS) {
                 suspendCancellableCoroutine { cont ->
-                    val done = AtomicBoolean(false)
                     reader.setOnImageAvailableListener(
                         { ir ->
                             // ImageReader 可能连续触发多次；只允许第一次成功/失败，后续全部忽略
@@ -123,7 +133,19 @@ object MediaProjectionScreenshotter {
                         },
                         handler,
                     )
+
+                        cont.invokeOnCancellation {
+                            // on timeout/cancel: stop listening
+                            try {
+                                reader.setOnImageAvailableListener(null, null)
+                            } catch (_: Throwable) {
+                            }
+                            done.set(true)
+                        }
                 }
+            }
+            } catch (t: TimeoutCancellationException) {
+                throw IllegalStateException("截屏超时：未在 ${TIMEOUT_MS}ms 内收到图像帧，请重试", t)
             }
         } finally {
             try {

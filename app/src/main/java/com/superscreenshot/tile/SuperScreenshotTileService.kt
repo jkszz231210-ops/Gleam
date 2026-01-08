@@ -2,7 +2,6 @@ package com.superscreenshot.tile
 
 import android.app.PendingIntent
 import android.content.Intent
-import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import com.superscreenshot.ui.CaptureActivity
@@ -29,19 +28,14 @@ class SuperScreenshotTileService : TileService() {
                                 Intent.FLAG_ACTIVITY_SINGLE_TOP,
                         )
 
-                if (Build.VERSION.SDK_INT >= 34) {
-                    val pi =
-                        PendingIntent.getActivity(
-                            this,
-                            0,
-                            intent,
-                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-                        )
-                    startActivityAndCollapse(pi)
-                } else {
-                    @Suppress("DEPRECATION")
-                    startActivityAndCollapse(intent)
-                }
+                val pi =
+                    PendingIntent.getActivity(
+                        this,
+                        0,
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+                    )
+                startActivityAndCollapse(pi)
             } catch (t: Throwable) {
                 // 不弹 Toast，避免被截进图里；失败时只能静默
             }

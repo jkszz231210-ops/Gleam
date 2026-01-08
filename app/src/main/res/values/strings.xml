@@ -1,13 +1,13 @@
 <resources>
-    <string name="app_name">SuperScreenshot</string>
-    <string name="tile_label">超级截屏</string>
+    <string name="app_name">静影</string>
+    <string name="tile_label">静影</string>
     <string name="capture_in_progress">捕捉中…</string>
     <string name="capture_failed_protected">此内容可能受保护（DRM），无法生成超级截屏。</string>
     <string name="capture_failed_generic">生成失败，请重试。</string>
     <string name="capture_saved">已保存到相册</string>
-    <string name="app_intro">超级截屏：一键把“屏幕内容 + 屏幕反射”记录到一张图。</string>
-    <string name="app_hint_tile">提示：在系统“编辑快捷设置”里把“超级截屏”拖进面板，之后下拉一点就能用。</string>
-    <string name="app_hint_kill_background">如果出现“无法截屏/一直弹授权/截到本应用界面”等异常，请先在系统多任务里划掉 SuperScreenshot（清后台）后再试。</string>
+    <string name="app_intro">静影：一键把“屏幕内容 + 屏幕反射”记录到一张图。</string>
+    <string name="app_hint_tile">提示：在系统“编辑快捷设置”里把“静影”拖进面板，之后下拉一点就能用。</string>
+    <string name="app_hint_kill_background">如果出现“无法截屏/一直弹授权/截到本应用界面”等异常，请先在系统多任务里划掉 静影（清后台）后再试。</string>
     <string name="current_bg_color">当前背景色：%1$s</string>
 
     <string name="section_bg_color">反射背景色</string>
@@ -16,6 +16,23 @@
     <string name="section_camera">相机选择</string>
     <string name="section_orientation">目标截图方向</string>
     <string name="section_reflection_tuning">反射调节（0.2）</string>
+
+    <string name="camera_back_short">后置</string>
+    <string name="camera_front_short">前置</string>
+    <string name="camera_help">后置拍前方/环境；前置拍自己/脸。</string>
+
+    <string name="orient_auto_short">跟随</string>
+    <string name="orient_portrait_short">竖屏</string>
+    <string name="orient_landscape_short">横屏</string>
+    <string name="orient_help">“跟随”会随屏幕旋转输出；强制模式用于固定方向。</string>
+
+    <string name="footer_hint_title">小提示</string>
+
+    <!-- Naming for files/album/notifications (localized via values-en override) -->
+    <string name="album_folder_name">静影</string>
+    <string name="screenshot_file_prefix">静影</string>
+    <string name="notif_channel_name">静影</string>
+    <string name="virtual_display_name">静影</string>
 </resources>
 
 

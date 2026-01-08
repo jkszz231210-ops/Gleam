@@ -97,7 +97,7 @@ class MediaProjectionCaptureService : Service() {
             val ch =
                 NotificationChannel(
                     CHANNEL_ID,
-                    "SuperScreenshot",
+                    getString(R.string.notif_channel_name),
                     NotificationManager.IMPORTANCE_LOW,
                 )
             nm.createNotificationChannel(ch)

@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fillViewport="true"
     android:background="@android:color/black">
 
     <LinearLayout
@@ -108,26 +109,47 @@
                     android:textColor="@android:color/white"
                     android:textSize="16sp" />
 
-                <RadioGroup
-                    android:id="@+id/cameraGroup"
+                <com.google.android.material.button.MaterialButtonToggleGroup
+                    android:id="@+id/cameraToggle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:orientation="horizontal">
-                    <RadioButton
-                        android:id="@+id/rbBackCamera"
-                        android:layout_width="wrap_content"
+                    app:singleSelection="true"
+                    app:selectionRequired="true"
+                    app:checkedButton="@id/btnCameraFront">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnCameraBack"
+                        style="?attr/materialButtonOutlinedStyle"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="后置 (拍前方/环境)"
-                        android:textColor="@android:color/white" />
-                    <RadioButton
-                        android:id="@+id/rbFrontCamera"
-                        android:layout_width="wrap_content"
+                        android:layout_weight="1"
+                        android:checkable="true"
+                        android:text="@string/camera_back_short"
+                        android:textColor="@android:color/white"
+                        app:strokeColor="#3AFFFFFF"
+                        app:cornerRadius="14dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnCameraFront"
+                        style="?attr/materialButtonOutlinedStyle"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="20dp"
-                        android:text="前置 (拍自己/脸)"
-                        android:textColor="@android:color/white" />
-                </RadioGroup>
+                        android:layout_weight="1"
+                        android:checkable="true"
+                        android:text="@string/camera_front_short"
+                        android:textColor="@android:color/white"
+                        app:strokeColor="#3AFFFFFF"
+                        app:cornerRadius="14dp" />
+                </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/camera_help"
+                    android:textColor="#99FFFFFF"
+                    android:textSize="12sp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -152,33 +174,59 @@
                     android:textColor="@android:color/white"
                     android:textSize="16sp" />
 
-                <RadioGroup
-                    android:id="@+id/orientationGroup"
+                <com.google.android.material.button.MaterialButtonToggleGroup
+                    android:id="@+id/orientationToggle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:orientation="horizontal">
-                    <RadioButton
-                        android:id="@+id/rbAutoOrientation"
-                        android:layout_width="wrap_content"
+                    app:singleSelection="true"
+                    app:selectionRequired="true"
+                    app:checkedButton="@id/btnOrientAuto">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnOrientAuto"
+                        style="?attr/materialButtonOutlinedStyle"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="跟随屏幕"
-                        android:textColor="@android:color/white" />
-                    <RadioButton
-                        android:id="@+id/rbPortrait"
-                        android:layout_width="wrap_content"
+                        android:layout_weight="1"
+                        android:checkable="true"
+                        android:text="@string/orient_auto_short"
+                        android:textColor="@android:color/white"
+                        app:strokeColor="#3AFFFFFF"
+                        app:cornerRadius="14dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnOrientPortrait"
+                        style="?attr/materialButtonOutlinedStyle"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="20dp"
-                        android:text="强制竖屏"
-                        android:textColor="@android:color/white" />
-                    <RadioButton
-                        android:id="@+id/rbLandscape"
-                        android:layout_width="wrap_content"
+                        android:layout_weight="1"
+                        android:checkable="true"
+                        android:text="@string/orient_portrait_short"
+                        android:textColor="@android:color/white"
+                        app:strokeColor="#3AFFFFFF"
+                        app:cornerRadius="14dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnOrientLandscape"
+                        style="?attr/materialButtonOutlinedStyle"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="20dp"
-                        android:text="强制横屏"
-                        android:textColor="@android:color/white" />
-                </RadioGroup>
+                        android:layout_weight="1"
+                        android:checkable="true"
+                        android:text="@string/orient_landscape_short"
+                        android:textColor="@android:color/white"
+                        app:strokeColor="#3AFFFFFF"
+                        app:cornerRadius="14dp" />
+                </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/orient_help"
+                    android:textColor="#99FFFFFF"
+                    android:textSize="12sp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -237,21 +285,44 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <TextView
-            android:layout_width="wrap_content"
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="@string/app_hint_tile"
-            android:textColor="#B3FFFFFF"
-            android:textSize="13sp" />
+            android:layout_marginTop="16dp"
+            app:cardBackgroundColor="#0F0F0F"
+            app:cardCornerRadius="18dp"
+            app:cardUseCompatPadding="true">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="@string/app_hint_kill_background"
-            android:textColor="#B3FFFFFF"
-            android:textSize="13sp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/footer_hint_title"
+                    android:textColor="#B3FFFFFF"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/app_hint_tile"
+                    android:textColor="#7AFFFFFF"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/app_hint_kill_background"
+                    android:textColor="#7AFFFFFF"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 </ScrollView>

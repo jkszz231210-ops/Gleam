@@ -1,11 +1,10 @@
 package com.superscreenshot.ui
 
 import android.os.Bundle
-import android.widget.RadioButton
-import android.widget.RadioGroup
 import android.widget.SeekBar
 import android.widget.TextView
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.button.MaterialButtonToggleGroup
 import androidx.appcompat.app.AppCompatActivity
 import com.superscreenshot.R
 import com.superscreenshot.settings.BgColorPrefs
@@ -20,8 +19,8 @@ class MainActivity : AppCompatActivity() {
         val swatch = findViewById<android.view.View>(R.id.currentColorSwatch)
         val wheel = findViewById<ColorWheelView>(R.id.colorWheel)
         val btnResetBlack = findViewById<MaterialButton>(R.id.btnResetBlack)
-        val cameraGroup = findViewById<RadioGroup>(R.id.cameraGroup)
-        val orientationGroup = findViewById<RadioGroup>(R.id.orientationGroup)
+        val cameraToggle = findViewById<MaterialButtonToggleGroup>(R.id.cameraToggle)
+        val orientationToggle = findViewById<MaterialButtonToggleGroup>(R.id.orientationToggle)
         val curveSeek = findViewById<SeekBar>(R.id.reflectionCurveSeek)
         val curveValue = findViewById<TextView>(R.id.reflectionCurveValue)
         val edgeSeek = findViewById<SeekBar>(R.id.edgeEnhanceSeek)
@@ -34,15 +33,15 @@ class MainActivity : AppCompatActivity() {
             wheel.setColor(c)
 
             if (BgColorPrefs.getCameraLens(this) == 1) {
-                findViewById<RadioButton>(R.id.rbFrontCamera).isChecked = true
+                cameraToggle.check(R.id.btnCameraFront)
             } else {
-                findViewById<RadioButton>(R.id.rbBackCamera).isChecked = true
+                cameraToggle.check(R.id.btnCameraBack)
             }
 
             when (BgColorPrefs.getTargetOrientation(this)) {
-                2 -> findViewById<RadioButton>(R.id.rbLandscape).isChecked = true
-                1 -> findViewById<RadioButton>(R.id.rbPortrait).isChecked = true
-                else -> findViewById<RadioButton>(R.id.rbAutoOrientation).isChecked = true
+                2 -> orientationToggle.check(R.id.btnOrientLandscape)
+                1 -> orientationToggle.check(R.id.btnOrientPortrait)
+                else -> orientationToggle.check(R.id.btnOrientAuto)
             }
 
             val exp = BgColorPrefs.getReflectionCurveExp(this)
@@ -68,20 +67,26 @@ class MainActivity : AppCompatActivity() {
             refresh()
         }
 
-        cameraGroup.setOnCheckedChangeListener { _, checkedId ->
-            val lens = if (checkedId == R.id.rbFrontCamera) 1 else 0
-            BgColorPrefs.setCameraLens(this, lens)
-        }
+        cameraToggle.addOnButtonCheckedListener(
+            MaterialButtonToggleGroup.OnButtonCheckedListener { _, checkedId, isChecked ->
+                if (!isChecked) return@OnButtonCheckedListener
+                val lens = if (checkedId == R.id.btnCameraFront) 1 else 0
+                BgColorPrefs.setCameraLens(this, lens)
+            },
+        )
 
-        orientationGroup.setOnCheckedChangeListener { _, checkedId ->
-            val orient =
-                when (checkedId) {
-                    R.id.rbLandscape -> 2
-                    R.id.rbPortrait -> 1
-                    else -> 0 // rbAutoOrientation
-                }
-            BgColorPrefs.setTargetOrientation(this, orient)
-        }
+        orientationToggle.addOnButtonCheckedListener(
+            MaterialButtonToggleGroup.OnButtonCheckedListener { _, checkedId, isChecked ->
+                if (!isChecked) return@OnButtonCheckedListener
+                val orient =
+                    when (checkedId) {
+                        R.id.btnOrientLandscape -> 2
+                        R.id.btnOrientPortrait -> 1
+                        else -> 0 // btnOrientAuto
+                    }
+                BgColorPrefs.setTargetOrientation(this, orient)
+            },
+        )
 
         curveSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {

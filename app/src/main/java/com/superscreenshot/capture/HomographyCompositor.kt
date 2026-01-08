@@ -17,7 +17,12 @@ object HomographyCompositor {
         private set
 
     fun initOpenCV(): Boolean {
-        isOpenCVReady = org.opencv.android.OpenCVLoader.initDebug()
+        isOpenCVReady =
+            try {
+                org.opencv.android.OpenCVLoader.initDebug()
+            } catch (_: Throwable) {
+                false
+            }
         return isOpenCVReady
     }
 
@@ -47,15 +52,22 @@ object HomographyCompositor {
         alpha: Float = 0.45f,
         edgeWeight: Float = 0.25f,
     ): Result {
-        if (!isOpenCVReady) return fallback(screenshot, cameraFrame, alpha)
+        val safeAlpha = alpha.coerceIn(0f, 1f)
+        val safeEdge = edgeWeight.coerceIn(0f, 1f)
+        if (!isOpenCVReady) return fallback(screenshot, cameraFrame, safeAlpha)
 
+        val mats = mutableListOf<Mat>()
         return try {
             val quad = ScreenQuadDetector.detect(cameraFrame)
-                ?: return fallback(screenshot, cameraFrame, alpha)
+                ?: return fallback(screenshot, cameraFrame, safeAlpha)
 
-            val camMat = Mat()
-            Utils.bitmapToMat(cameraFrame, camMat)
-            Imgproc.cvtColor(camMat, camMat, Imgproc.COLOR_RGBA2RGB)
+            val camMat = Mat().track(mats)
+            val shotMat = Mat().track(mats)
+            val reflectionWarped = Mat().track(mats)
+            val residual = Mat().track(mats)
+            val out = Mat().track(mats)
+            val outRgba = Mat().track(mats)
+            val residualRgba = Mat().track(mats)
 
             val shotW = screenshot.width
             val shotH = screenshot.height
@@ -71,34 +83,34 @@ object HomographyCompositor {
             )
 
             val h = Imgproc.getPerspectiveTransform(src, dst)
-            val reflectionWarped = Mat(Size(shotW.toDouble(), shotH.toDouble()), camMat.type())
-            Imgproc.warpPerspective(camMat, reflectionWarped, h, reflectionWarped.size())
+
+            Utils.bitmapToMat(cameraFrame, camMat)
+            Imgproc.cvtColor(camMat, camMat, Imgproc.COLOR_RGBA2RGB)
+
+            reflectionWarped.create(Size(shotW.toDouble(), shotH.toDouble()), camMat.type())
+            Imgproc.warpPerspective(camMat, reflectionWarped, h, reflectionWarped.size(), Imgproc.INTER_LINEAR)
 
             // 现在 reflectionWarped 就是对齐到截图分辨率的“反射层”
-            val shotMat = Mat()
             Utils.bitmapToMat(screenshot, shotMat)
             Imgproc.cvtColor(shotMat, shotMat, Imgproc.COLOR_RGBA2RGB)
 
             // residual = reflectionWarped - shotMat (提取纯反射)
-            val residual = Mat()
             Core.subtract(reflectionWarped, shotMat, residual)
 
             // 关键：只在“屏幕暗部”展示反射，避免整体变亮/自拍感
-            val residualMasked = applyDarkScreenMask(shotMat, residual, edgeWeight)
+            val residualMasked = applyDarkScreenMask(shotMat, residual, safeEdge)
+            mats.add(residualMasked)
 
             // output = shotMat + alpha * residualMasked
-            val out = Mat()
             Core.addWeighted(
                 shotMat,
                 1.0,
                 residualMasked,
-                alpha.coerceIn(0f, 1f).toDouble(),
+                safeAlpha.toDouble(),
                 0.0,
                 out,
             )
 
-            val outRgba = Mat()
-            val residualRgba = Mat()
             Imgproc.cvtColor(out, outRgba, Imgproc.COLOR_RGB2RGBA)
             Imgproc.cvtColor(residualMasked, residualRgba, Imgproc.COLOR_RGB2RGBA)
 
@@ -113,7 +125,10 @@ object HomographyCompositor {
                 usedFallback = false,
             )
         } catch (t: Throwable) {
-            fallback(screenshot, cameraFrame, alpha)
+            fallback(screenshot, cameraFrame, safeAlpha)
+        } finally {
+            // 主动释放 Mat，避免多次截图时积累
+            releaseAll(mats)
         }
     }
 
@@ -122,23 +137,29 @@ object HomographyCompositor {
         val h = screenWarped.height
         require(residual.width == w && residual.height == h)
 
-        val base = Mat()
-        val res = Mat()
-        Utils.bitmapToMat(screenWarped, base)
-        Utils.bitmapToMat(residual, res)
-        Imgproc.cvtColor(base, base, Imgproc.COLOR_RGBA2RGB)
-        Imgproc.cvtColor(res, res, Imgproc.COLOR_RGBA2RGB)
+        val mats = mutableListOf<Mat>()
+        return try {
+            val base = Mat().track(mats)
+            val res = Mat().track(mats)
+            Utils.bitmapToMat(screenWarped, base)
+            Utils.bitmapToMat(residual, res)
+            Imgproc.cvtColor(base, base, Imgproc.COLOR_RGBA2RGB)
+            Imgproc.cvtColor(res, res, Imgproc.COLOR_RGBA2RGB)
 
-        val resMasked = applyDarkScreenMask(base, res, edgeWeight)
+            val resMasked = applyDarkScreenMask(base, res, edgeWeight.coerceIn(0f, 1f))
+            mats.add(resMasked)
 
-        val out = Mat()
-        Core.addWeighted(base, 1.0, resMasked, alpha.coerceIn(0f, 1f).toDouble(), 0.0, out)
+            val out = Mat().track(mats)
+            Core.addWeighted(base, 1.0, resMasked, alpha.coerceIn(0f, 1f).toDouble(), 0.0, out)
 
-        val outRgba = Mat()
-        Imgproc.cvtColor(out, outRgba, Imgproc.COLOR_RGB2RGBA)
-        val outBmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-        Utils.matToBitmap(outRgba, outBmp)
-        return outBmp
+            val outRgba = Mat().track(mats)
+            Imgproc.cvtColor(out, outRgba, Imgproc.COLOR_RGB2RGBA)
+            val outBmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+            Utils.matToBitmap(outRgba, outBmp)
+            outBmp
+        } finally {
+            releaseAll(mats)
+        }
     }
 
     private fun warpScreenshotToQuad(
@@ -201,59 +222,75 @@ object HomographyCompositor {
      * 根据屏幕内容亮度生成遮罩：越暗 -> 越显示反射；越亮 -> 越抑制反射。
      */
     private fun applyDarkScreenMask(screenRgb: Mat, residualRgb: Mat, edgeWeight: Float): Mat {
+        val mats = mutableListOf<Mat>()
         // 核心目标：
         // 1) 反射强度随屏幕亮度变化：屏幕亮 -> 反射几乎消失；屏幕暗 -> 反射明显
         // 2) 反射强调“轮廓”，弱化内部细节：更像玻璃里隐隐出现的人/环境，而不是相机拍清细节
         //
         // mask = (1 - gray(screen))^3  -> 暗部更强，亮部更弱
-        val gray = Mat()
+        val gray = Mat().track(mats)
         Imgproc.cvtColor(screenRgb, gray, Imgproc.COLOR_RGB2GRAY)
 
-        val grayF = Mat()
+        val grayF = Mat().track(mats)
         gray.convertTo(grayF, CvType.CV_32F, 1.0 / 255.0)
 
         // 全局强度（屏幕越亮越趋近 0）
         val mean = Core.mean(grayF).`val`[0].coerceIn(0.0, 1.0)
         val global = ((1.0 - mean) * (1.0 - mean)).coerceIn(0.0, 1.0)
 
-        val inv = Mat(grayF.size(), CvType.CV_32F, Scalar(1.0))
+        val inv = Mat(grayF.size(), CvType.CV_32F, Scalar(1.0)).track(mats)
         Core.subtract(inv, grayF, inv) // inv = 1 - gray
         Core.multiply(inv, inv, inv) // inv = inv^2
         Core.multiply(inv, inv, inv) // inv = inv^3
 
         // residualF = residual * inv * strength
-        val residualF = Mat()
+        val residualF = Mat().track(mats)
         residualRgb.convertTo(residualF, CvType.CV_32F)
 
-        val inv3 = Mat()
+        val inv3 = Mat().track(mats)
         Imgproc.cvtColor(inv, inv3, Imgproc.COLOR_GRAY2RGB) // 3 通道遮罩
 
         Core.multiply(residualF, inv3, residualF)
         // 屏幕越暗 global 越大，整体反射越强；同时整体强度更大一些，解决“暗屏反射不够”
         Core.multiply(residualF, Scalar(0.45 * global, 0.45 * global, 0.45 * global), residualF)
 
-        val masked8 = Mat()
+        val masked8 = Mat().track(mats)
         residualF.convertTo(masked8, CvType.CV_8UC3) // 回到 0..255
 
         // 细节处理：模糊 + 边缘增强（“轮廓清晰、内部朦胧”）
-        val blurred = Mat()
+        val blurred = Mat().track(mats)
         Imgproc.GaussianBlur(masked8, blurred, Size(0.0, 0.0), 3.0)
 
-        val grayRes = Mat()
+        val grayRes = Mat().track(mats)
         Imgproc.cvtColor(blurred, grayRes, Imgproc.COLOR_RGB2GRAY)
 
-        val edges = Mat()
+        val edges = Mat().track(mats)
         Imgproc.Canny(grayRes, edges, 12.0, 40.0)
         val kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, Size(3.0, 3.0))
         Imgproc.dilate(edges, edges, kernel)
 
-        val edgesRgb = Mat()
+        val edgesRgb = Mat().track(mats)
         Imgproc.cvtColor(edges, edgesRgb, Imgproc.COLOR_GRAY2RGB)
 
-        val out = Mat()
+        val out = Mat().track(mats)
         // edges 只做轻量增强，避免出现“线稿感”
         Core.addWeighted(blurred, 1.0, edgesRgb, edgeWeight.coerceIn(0f, 1f).toDouble(), 0.0, out)
+        releaseAll(mats.filter { it !== out })
         return out
+    }
+
+    private fun Mat.track(list: MutableList<Mat>): Mat {
+        list.add(this)
+        return this
+    }
+
+    private fun releaseAll(mats: List<Mat>) {
+        mats.forEach {
+            try {
+                it.release()
+            } catch (_: Throwable) {
+            }
+        }
     }
 }
 
