@@ -5,7 +5,14 @@
 
 APP_HOME=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P) || exit
 
-DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
+# NOTE:
+# In POSIX sh, quotes inside a variable are literal characters and won't be
+# re-interpreted during expansion. The previous value contained embedded quotes
+# (e.g. "\"-Xmx64m\""), which caused Java to treat it as a main-class name:
+# "Could not find or load main class \"-Xmx64m\"".
+#
+# Keep this as plain, space-separated JVM args so word splitting yields 2 args.
+DEFAULT_JVM_OPTS='-Xmx64m -Xms64m'
 
 CLASSPATH="$APP_HOME/gradle/wrapper/gradle-wrapper.jar"
 
