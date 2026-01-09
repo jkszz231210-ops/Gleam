@@ -14,4 +14,7 @@ local.properties
 .DS_Store
 Thumbs.db
 
+# Build artifacts for sharing
+dist/
+
 
