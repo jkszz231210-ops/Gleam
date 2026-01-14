@@ -8,9 +8,6 @@
     <string name="notif_channel_name">Gleam</string>
     <string name="virtual_display_name">Gleam</string>
 
-    <string name="section_bg_color">Reflection background</string>
-    <string name="bg_color_tip">Used for “reflection-layer background replacement”. Pick a color on the wheel; tap the button to return to pure black.</string>
-    <string name="btn_reset_black">Reset to black</string>
     <string name="section_camera">Camera</string>
     <string name="section_orientation">Output orientation</string>
     <string name="section_reflection_tuning">Reflection tuning (0.2)</string>

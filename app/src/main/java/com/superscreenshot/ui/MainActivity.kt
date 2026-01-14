@@ -3,22 +3,16 @@ package com.superscreenshot.ui
 import android.os.Bundle
 import android.widget.SeekBar
 import android.widget.TextView
-import com.google.android.material.button.MaterialButton
 import com.google.android.material.button.MaterialButtonToggleGroup
 import androidx.appcompat.app.AppCompatActivity
 import com.superscreenshot.R
 import com.superscreenshot.settings.BgColorPrefs
-import com.superscreenshot.ui.widget.ColorWheelView
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val current = findViewById<TextView>(R.id.currentColorText)
-        val swatch = findViewById<android.view.View>(R.id.currentColorSwatch)
-        val wheel = findViewById<ColorWheelView>(R.id.colorWheel)
-        val btnResetBlack = findViewById<MaterialButton>(R.id.btnResetBlack)
         val cameraToggle = findViewById<MaterialButtonToggleGroup>(R.id.cameraToggle)
         val orientationToggle = findViewById<MaterialButtonToggleGroup>(R.id.orientationToggle)
         val curveSeek = findViewById<SeekBar>(R.id.reflectionCurveSeek)
@@ -27,11 +21,6 @@ class MainActivity : AppCompatActivity() {
         val edgeValue = findViewById<TextView>(R.id.edgeEnhanceValue)
 
         fun refresh() {
-            val c = BgColorPrefs.getBgColor(this)
-            current.text = getString(R.string.current_bg_color, String.format("#%08X", c))
-            swatch.setBackgroundColor(c)
-            wheel.setColor(c)
-
             if (BgColorPrefs.getCameraLens(this) == 1) {
                 cameraToggle.check(R.id.btnCameraFront)
             } else {
@@ -51,20 +40,6 @@ class MainActivity : AppCompatActivity() {
             val edge = BgColorPrefs.getEdgeEnhanceWeight(this)
             edgeValue.text = "轮廓增强：${(edge * 100).toInt()}%"
             edgeSeek.progress = (edge * 100f).toInt().coerceIn(0, 100)
-        }
-
-        wheel.setOnColorChangedListener(object : ColorWheelView.OnColorChangedListener {
-            override fun onColorChanged(color: Int) {
-                BgColorPrefs.setBgColor(this@MainActivity, color)
-                val c = BgColorPrefs.getBgColor(this@MainActivity)
-                current.text = getString(R.string.current_bg_color, String.format("#%08X", c))
-                swatch.setBackgroundColor(c)
-            }
-        })
-
-        btnResetBlack.setOnClickListener {
-            BgColorPrefs.setBgColor(this, android.graphics.Color.BLACK)
-            refresh()
         }
 
         cameraToggle.addOnButtonCheckedListener(

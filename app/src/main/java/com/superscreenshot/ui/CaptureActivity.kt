@@ -226,8 +226,12 @@ class CaptureActivity : AppCompatActivity() {
                                 edgeWeight = edgeWeight,
                             )
 
-                            val bgColor = BgColorPrefs.getBgColor(this@CaptureActivity)
-                            val replacedResidual = ResidualBackgroundReplacer.replaceBackgroundOrNull(base.residual, bgColor)
+                            // 0.3: 简化设置页，反射残余背景固定替换为纯黑
+                            val replacedResidual =
+                                ResidualBackgroundReplacer.replaceBackgroundOrNull(
+                                    base.residual,
+                                    android.graphics.Color.BLACK,
+                                )
 
                             if (replacedResidual != null && !base.usedFallback) {
                                 HomographyCompositor.composeFromWarpedAndResidual(

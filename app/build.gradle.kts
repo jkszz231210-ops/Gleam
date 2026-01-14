@@ -11,8 +11,8 @@ android {
         applicationId = "com.superscreenshot"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2
-        versionName = "0.2.0"
+        versionCode = 3
+        versionName = "0.3.0"
     }
 
     buildTypes {
@@ -50,9 +50,9 @@ tasks.register<Copy>("copyDebug02Apk") {
     val dstDir = layout.buildDirectory.dir("outputs/apk/ss")
     from(srcDir)
     include("*.apk")
-    exclude("app-debug-0.2.apk")
+    exclude("app-debug-0.3.apk")
     into(dstDir)
-    rename { "app-debug-0.2.apk" }
+    rename { "app-debug-0.3.apk" }
 }
 
 dependencies {

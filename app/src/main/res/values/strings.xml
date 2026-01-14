@@ -8,11 +8,7 @@
     <string name="app_intro">浮光：一键把“屏幕内容 + 屏幕反射”记录到一张图。</string>
     <string name="app_hint_tile">提示：在系统“编辑快捷设置”里把“浮光”拖进面板，之后下拉一点就能用。</string>
     <string name="app_hint_kill_background">如果出现“无法截屏/一直弹授权/截到本应用界面”等异常，请先在系统多任务里划掉 浮光（清后台）后再试。</string>
-    <string name="current_bg_color">当前背景色：%1$s</string>
 
-    <string name="section_bg_color">反射背景色</string>
-    <string name="bg_color_tip">用于“反射层背景纯色替换”。点色轮选色；需要回到纯黑时点下面按钮。</string>
-    <string name="btn_reset_black">一键回到黑色</string>
     <string name="section_camera">相机选择</string>
     <string name="section_orientation">目标截图方向</string>
     <string name="section_reflection_tuning">反射调节（0.2）</string>
