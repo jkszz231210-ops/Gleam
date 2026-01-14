@@ -11,8 +11,8 @@ android {
         applicationId = "com.superscreenshot"
         minSdk = 26
         targetSdk = 34
-        versionCode = 3
-        versionName = "0.3.0"
+        versionCode = 4
+        versionName = "0.4.0"
     }
 
     buildTypes {
@@ -25,7 +25,7 @@ android {
         }
 
         // Windows 上经常会出现旧的 debug APK 被资源管理器/杀软占用导致 :app:packageDebug 无法删除输出目录。
-        // 新增一个独立的 buildType，用于输出到 outputs/apk/debug02/，并固定文件名为 app-debug-0.2.apk。
+        // 新增一个独立的 buildType，用于输出到 outputs/apk/debug02/，并固定文件名（见 copyDebug02Apk）。
         create("debug02") {
             initWith(getByName("debug"))
             matchingFallbacks += listOf("debug")
@@ -50,9 +50,9 @@ tasks.register<Copy>("copyDebug02Apk") {
     val dstDir = layout.buildDirectory.dir("outputs/apk/ss")
     from(srcDir)
     include("*.apk")
-    exclude("app-debug-0.3.apk")
+    exclude("app-debug-0.4.apk")
     into(dstDir)
-    rename { "app-debug-0.3.apk" }
+    rename { "app-debug-0.4.apk" }
 }
 
 dependencies {
