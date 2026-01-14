@@ -1,13 +1,13 @@
 <resources>
-    <string name="app_name">静影</string>
-    <string name="tile_label">静影</string>
+    <string name="app_name">浮光（Gleam）</string>
+    <string name="tile_label">浮光</string>
     <string name="capture_in_progress">捕捉中…</string>
     <string name="capture_failed_protected">此内容可能受保护（DRM），无法生成超级截屏。</string>
     <string name="capture_failed_generic">生成失败，请重试。</string>
     <string name="capture_saved">已保存到相册</string>
-    <string name="app_intro">静影：一键把“屏幕内容 + 屏幕反射”记录到一张图。</string>
-    <string name="app_hint_tile">提示：在系统“编辑快捷设置”里把“静影”拖进面板，之后下拉一点就能用。</string>
-    <string name="app_hint_kill_background">如果出现“无法截屏/一直弹授权/截到本应用界面”等异常，请先在系统多任务里划掉 静影（清后台）后再试。</string>
+    <string name="app_intro">浮光：一键把“屏幕内容 + 屏幕反射”记录到一张图。</string>
+    <string name="app_hint_tile">提示：在系统“编辑快捷设置”里把“浮光”拖进面板，之后下拉一点就能用。</string>
+    <string name="app_hint_kill_background">如果出现“无法截屏/一直弹授权/截到本应用界面”等异常，请先在系统多任务里划掉 浮光（清后台）后再试。</string>
     <string name="current_bg_color">当前背景色：%1$s</string>
 
     <string name="section_bg_color">反射背景色</string>
@@ -29,10 +29,10 @@
     <string name="footer_hint_title">小提示</string>
 
     <!-- Naming for files/album/notifications (localized via values-en override) -->
-    <string name="album_folder_name">静影</string>
-    <string name="screenshot_file_prefix">静影</string>
-    <string name="notif_channel_name">静影</string>
-    <string name="virtual_display_name">静影</string>
+    <string name="album_folder_name">浮光</string>
+    <string name="screenshot_file_prefix">浮光</string>
+    <string name="notif_channel_name">浮光</string>
+    <string name="virtual_display_name">浮光</string>
 </resources>
 
 
