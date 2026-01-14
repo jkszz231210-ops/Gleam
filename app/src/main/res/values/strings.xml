@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">浮光（Gleam）</string>
+    <string name="app_name">浮光</string>
     <string name="tile_label">浮光</string>
     <string name="capture_in_progress">捕捉中…</string>
     <string name="capture_failed_protected">此内容可能受保护（DRM），无法生成超级截屏。</string>
@@ -24,7 +24,7 @@
 
     <string name="footer_hint_title">小提示</string>
 
-    <!-- Naming for files/album/notifications (localized via values-en override) -->
+    <!-- Naming for files/album/notifications -->
     <string name="album_folder_name">浮光</string>
     <string name="screenshot_file_prefix">浮光</string>
     <string name="notif_channel_name">浮光</string>
