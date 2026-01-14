@@ -1,11 +1,16 @@
-name: Build Debug APK
+name: Build Gleam Debug APK
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
+    tags:
+      - "v*"
   pull_request:
     branches: [main]
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -27,9 +32,22 @@ jobs:
       - name: Assemble debug APK
         run: ./gradlew :app:assembleDebug
 
+      - name: Prepare APK (rename)
+        run: |
+          mkdir -p release
+          cp app/build/outputs/apk/debug/*.apk release/Gleam-debug.apk
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: super-screenshot-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          name: Gleam-debug
+          path: release/Gleam-debug.apk
           if-no-files-found: error
+
+      - name: Publish GitHub Release (on tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/Gleam-debug.apk
+          fail_on_unmatched_files: true
+          generate_release_notes: true
